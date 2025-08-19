@@ -37,10 +37,11 @@
         let pkgs = nixpkgsFor.${system};
         in {
           default = pkgs.mkShell {
-            buildInputs = with pkgs; [ go gopls gotools go-tools ];
+            buildInputs = with pkgs; [ go gopls gotools go-tools postgresql ];
           };
         });
 
-      defaultPackage = forAllSystems (system: self.packages.${system}.go-hello);
+      defaultPackage =
+        forAllSystems (system: self.packages.${system}.duty-reminder);
     };
 }

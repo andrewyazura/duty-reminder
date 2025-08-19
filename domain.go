@@ -1,16 +1,17 @@
 package main
 
 type Household struct {
-	Members       []*Member
-	CurrentMember int
+	Checklist     []string
 	Crontab       string
+	CurrentMember int
+	Members       []*Member
+	TelegramID    int
 }
 
 func NewHousehold() Household {
 	return Household{
-		Members:       []*Member{},
-		CurrentMember: 0,
-		Crontab:       "",
+		Members:   []*Member{},
+		Checklist: []string{},
 	}
 }
 
