@@ -1,22 +1,25 @@
-package main
+// Package storage
+package storage
 
 import (
 	"context"
 	"database/sql"
+
+	"github.com/andrewyazura/duty-reminder/internal/domain"
 )
 
 type HouseholdRepository interface {
-	Create(h *Household) error
-	FindByID(id int) (*Household, error)
+	Create(h *domain.Household) error
+	FindByID(id int) (*domain.Household, error)
 }
 
 type PostgresHouseholdRepository struct{ db *sql.DB }
 
-func (repo PostgresHouseholdRepository) Create(h *Household) error {
-
+func (repo PostgresHouseholdRepository) Create(h *domain.Household) error {
+	return nil
 }
 
-func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID int) (*Household, error) {
+func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID int) (*domain.Household, error) {
 	householdQuery := `
 		SELECT 
 			checklist,
@@ -26,7 +29,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 		WHERE telegram_id = $1
 	`
 
-	h := &Household{TelegramID: telegramID}
+	h := &domain.Household{TelegramID: telegramID}
 
 	row := repo.db.QueryRowContext(ctx, householdQuery, telegramID)
 	err := row.Scan(&h.Checklist, &h.Crontab, &h.CurrentMember)
@@ -52,9 +55,9 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 
 	defer rows.Close()
 
-	h.Members = []*Member{}
+	h.Members = []*domain.Member{}
 	for rows.Next() {
-		member := &Member{}
+		member := &domain.Member{}
 		if err := rows.Scan(&member.TelegramID, &member.Name); err != nil {
 			return nil, err
 		}

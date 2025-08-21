@@ -1,4 +1,5 @@
-package main
+// Package domain
+package domain
 
 type Household struct {
 	Checklist     []string
