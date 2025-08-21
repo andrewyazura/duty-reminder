@@ -3,7 +3,9 @@ package storage
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/andrewyazura/duty-reminder/internal/domain"
 )
@@ -13,7 +15,15 @@ type HouseholdRepository interface {
 	FindByID(id int) (*domain.Household, error)
 }
 
-type PostgresHouseholdRepository struct{ db *sql.DB }
+type Querier interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+type PostgresHouseholdRepository struct {
+	db Querier
+}
 
 func (repo PostgresHouseholdRepository) Create(h *domain.Household) error {
 	return nil
@@ -31,7 +41,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 
 	h := &domain.Household{TelegramID: telegramID}
 
-	row := repo.db.QueryRowContext(ctx, householdQuery, telegramID)
+	row := repo.db.QueryRow(ctx, householdQuery, telegramID)
 	err := row.Scan(&h.Checklist, &h.Crontab, &h.CurrentMember)
 
 	if err != nil {
@@ -47,7 +57,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 			household_telegram_id = $1
 	`
 
-	rows, err := repo.db.QueryContext(ctx, membersQuery, telegramID)
+	rows, err := repo.db.Query(ctx, membersQuery, telegramID)
 
 	if err != nil {
 		return nil, err
