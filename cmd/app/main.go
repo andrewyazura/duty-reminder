@@ -1,34 +1,30 @@
 package main
 
 import (
-	"io"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/andrewyazura/duty-reminder/internal/config"
+	"github.com/andrewyazura/duty-reminder/internal/eventbus"
+	"github.com/andrewyazura/duty-reminder/internal/routes"
 )
 
-func healthCheck(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "ok")
-}
-
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v\n", r)
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 func main() {
-	c := config.NewConfig()
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	err := config.LoadJSONConfigFile(c, "config.json")
+	config, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("%v\n", err)
+		logger.Error("couldn't build config", "error", err)
 	}
 
-	http.HandleFunc("/health", healthCheck)
+	eventBus := eventbus.NewEventBus()
+	server := routes.NewServer(config.Server, config.Telegram, logger, eventBus)
 
-	http.ListenAndServe(":1234", LoggingMiddleware(http.DefaultServeMux))
+	logger.Info("starting server on port 8080")
+
+	if err := http.ListenAndServe(":"+config.Server.Port, server); err != nil {
+		logger.Error("server failed to start")
+		os.Exit(1)
+	}
 }

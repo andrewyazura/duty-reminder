@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type Event interface{}
+type Event any
 type EventType string
 type Handler func(Event)
 
