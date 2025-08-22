@@ -2,66 +2,62 @@
 package config
 
 import (
-	"encoding/json"
 	"os"
-	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Server ServerConfig `json:"server"`
-	DB     DBConfig     `json:"database"`
-	App    AppConfig    `json:"app"`
+	Server   ServerConfig
+	Database DatabaseConfig
+	Telegram TelegramConfig
 }
 
 type ServerConfig struct {
-	Port         int           `json:"port"`
-	ReadTimeout  time.Duration `json:"read_timeout"`
-	WriteTimeout time.Duration `json:"write_timeout"`
+	Port                string
+	TelegramRouteSecret string
 }
 
-type DBConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
+type DatabaseConfig struct{}
+
+type TelegramConfig struct {
+	HeaderSecret string
+	APIToken     string
 }
 
-type AppConfig struct {
-	Environment string `json:"environment"`
-	LogLevel    string `json:"log_level"`
-}
-
-func NewConfig() *Config {
-	return &Config{
-		Server: ServerConfig{
-			Port:         1234,
-			ReadTimeout:  30 * time.Second,
-			WriteTimeout: 30 * time.Second,
-		},
-		DB: DBConfig{
-			Host:     "localhost",
-			Port:     5432,
-			User:     "duty-reminder-app",
-			Password: "duty-reminder-app",
-			Name:     "duty-reminder-db",
-		},
-		App: AppConfig{
-			Environment: "dev",
-			LogLevel:    "debug",
-		},
-	}
-}
-
-func LoadJSONConfigFile(config *Config, filename string) error {
-	file, err := os.Open(filename)
-
+func NewConfig() (*Config, error) {
+	err := godotenv.Load()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	defer file.Close()
+	config := &Config{
+		Server: ServerConfig{
+			Port:                "8080",
+			TelegramRouteSecret: "secret",
+		},
+		Database: DatabaseConfig{},
+		Telegram: TelegramConfig{
+			HeaderSecret: "secret",
+			APIToken:     "token",
+		},
+	}
 
-	decoder := json.NewDecoder(file)
-	return decoder.Decode(config)
+	if v := os.Getenv("SERVER_PORT"); v != "" {
+		config.Server.Port = v
+	}
+
+	if v := os.Getenv("SERVER_TELEGRAM_ROUTE_SECRET"); v != "" {
+		config.Server.TelegramRouteSecret = v
+	}
+
+	if v := os.Getenv("TELEGRAM_HEADER_SECRET"); v != "" {
+		config.Telegram.HeaderSecret = v
+	}
+
+	if v := os.Getenv("TELEGRAM_API_TOKEN"); v != "" {
+		config.Telegram.APIToken = v
+	}
+
+	return config, nil
 }
