@@ -1,18 +1,18 @@
 // Package eventbus
 package eventbus
 
-import "sync"
+import (
+	"log/slog"
+	"sync"
+)
 
+type Event interface{}
 type EventType string
-type Event struct {
-	Type EventType
-}
-
 type Handler func(Event)
 
 type EventBus struct {
 	table map[EventType][]Handler
-	lock    sync.RWMutex
+	lock  sync.RWMutex
 }
 
 func NewEventBus() *EventBus {
@@ -28,12 +28,21 @@ func (eb *EventBus) Subscribe(eventType EventType, handler Handler) {
 	eb.table[eventType] = append(eb.table[eventType], handler)
 }
 
-func (eb *EventBus) Publish(event Event) {
+func (eb *EventBus) Publish(eventType EventType, event Event) {
 	eb.lock.RLock()
-	handlers := eb.table[event.Type]
+	handlersToCall := make([]Handler, 0, len(eb.table[eventType]))
+	handlersToCall = append(handlersToCall, eb.table[eventType]...)
 	eb.lock.RUnlock()
 
-	for _, h := range handlers {
-		h(event)
+	for _, handler := range handlersToCall {
+		go func(h Handler) {
+			defer func() {
+				if r := recover(); r != nil {
+					slog.Error("recovered error: %v", r)
+				}
+			}()
+
+			h(event)
+		}(handler)
 	}
 }

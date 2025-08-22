@@ -1,6 +1,7 @@
 package eventbus
 
 import (
+	"sync"
 	"sync/atomic"
 	"testing"
 )
@@ -28,17 +29,20 @@ func TestPublish(t *testing.T) {
 	eb := NewEventBus()
 	var count atomic.Int32
 
-	eb.Subscribe("event-1", func(e Event) {
-		count.Add(1)
-	})
-	eb.Subscribe("event-1", func(e Event) {
-		count.Add(1)
-	})
-	eb.Subscribe("event-2", func(e Event) {
-		count.Add(1)
-	})
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	eb.Publish(Event{Type: "event-1"})
+	handler := func(e Event) {
+		defer wg.Done()
+		count.Add(1)
+	}
+
+	eb.Subscribe("event-1", handler)
+	eb.Subscribe("event-1", handler)
+	eb.Subscribe("event-2", handler)
+
+	eb.Publish("event-1", struct{}{})
+	wg.Wait()
 
 	if gotCount := count.Load(); gotCount != 2 {
 		t.Fatalf("after publishing, count is %d, want %d", gotCount, 2)
