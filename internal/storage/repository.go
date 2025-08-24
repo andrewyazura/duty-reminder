@@ -11,8 +11,9 @@ import (
 )
 
 type HouseholdRepository interface {
-	Create(h *domain.Household) error
-	FindByID(id int) (*domain.Household, error)
+	Create(ctx context.Context, h *domain.Household) error
+	Save(ctx context.Context, h *domain.Household) error
+	FindByID(ctx context.Context, telegramID int) (*domain.Household, error)
 }
 
 type Querier interface {
@@ -25,7 +26,56 @@ type PostgresHouseholdRepository struct {
 	db Querier
 }
 
-func (repo PostgresHouseholdRepository) Create(h *domain.Household) error {
+func NewPostgresHouseholdRepository(querier Querier) *PostgresHouseholdRepository {
+	return &PostgresHouseholdRepository{db: querier}
+}
+
+func (repo PostgresHouseholdRepository) Create(ctx context.Context, h *domain.Household) error {
+	insertHouseholdQuery := `
+		INSERT INTO households (
+			telegram_id,
+			checklist,
+			crontab,
+			current_member_index
+		) VALUES ($1, $2, $3, $4)
+	`
+
+	_, err := repo.db.Exec(
+		ctx,
+		insertHouseholdQuery,
+		h.TelegramID,
+		h.Checklist,
+		h.Crontab,
+		h.CurrentMember,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo PostgresHouseholdRepository) Save(ctx context.Context, h *domain.Household) error {
+	updateHouseholdQuery := `
+		UPDATE households
+		SET checklist = $1, crontab = $2, current_member_index = $3
+		WHERE telegram_id = $4
+	`
+
+	_, err := repo.db.Exec(
+		ctx,
+		updateHouseholdQuery,
+		h.Checklist,
+		h.Crontab,
+		h.CurrentMember,
+		h.TelegramID,
+	)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -55,6 +105,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 		FROM members
 		WHERE
 			household_telegram_id = $1
+		ORDER BY order DESC
 	`
 
 	rows, err := repo.db.Query(ctx, membersQuery, telegramID)
