@@ -7,7 +7,7 @@ func TestAddMember(t *testing.T) {
 	alice := Member{Name: "Alice", TelegramID: 1}
 	bob := Member{Name: "Bob", TelegramID: 2}
 
-	h.AddMember(alice)
+	h.AddMember(&alice)
 
 	if gotLen := len(h.Members); gotLen != 1 {
 		t.Fatalf("members list has length %d, want %d", gotLen, 1)
@@ -17,7 +17,7 @@ func TestAddMember(t *testing.T) {
 		t.Fatalf("got [ %v ], want [ %v ]", gotAlice, alice)
 	}
 
-	h.AddMember(bob)
+	h.AddMember(&bob)
 
 	if gotLen := len(h.Members); gotLen != 2 {
 		t.Fatalf("members list has length %d, want %d", gotLen, 2)
@@ -34,10 +34,10 @@ func TestRemoveMember(t *testing.T) {
 	alice := Member{Name: "Alice", TelegramID: 1}
 	bob := Member{Name: "Bob", TelegramID: 2}
 
-	h.AddMember(alice)
-	h.AddMember(bob)
+	h.AddMember(&alice)
+	h.AddMember(&bob)
 
-	h.RemoveMember(alice)
+	h.RemoveMember(&alice)
 
 	for _, m := range h.Members {
 		if m.Name == "Alice" {
@@ -45,8 +45,8 @@ func TestRemoveMember(t *testing.T) {
 		}
 	}
 
-	h.AddMember(alice)
-	h.RemoveMember(bob)
+	h.AddMember(&alice)
+	h.RemoveMember(&bob)
 
 	for _, m := range h.Members {
 		if m.Name == "Bob" {
@@ -54,7 +54,7 @@ func TestRemoveMember(t *testing.T) {
 		}
 	}
 
-	h.RemoveMember(alice)
+	h.RemoveMember(&alice)
 
 	if gotLen := len(h.Members); gotLen != 0 {
 		t.Fatalf("members list has length %d, want %d", gotLen, 0)
@@ -68,9 +68,9 @@ func TestPopCurrentMember(t *testing.T) {
 	bob := Member{Name: "Bob", TelegramID: 2}
 	charlie := Member{Name: "Charlie", TelegramID: 3}
 
-	h.AddMember(alice)
-	h.AddMember(bob)
-	h.AddMember(charlie)
+	h.AddMember(&alice)
+	h.AddMember(&bob)
+	h.AddMember(&charlie)
 
 	if gotCurrent := h.PopCurrentMember(); *gotCurrent != alice {
 		t.Fatalf("popped %v, want %v", gotCurrent, alice)

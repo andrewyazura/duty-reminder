@@ -11,16 +11,19 @@ type Household struct {
 
 func NewHousehold() Household {
 	return Household{
-		Members:   []*Member{},
-		Checklist: []string{},
+		Checklist:     []string{},
+		Crontab:       "0 9 * * 6", // at 9:00 on Saturday
+		CurrentMember: 0,
+		Members:       []*Member{},
+		TelegramID:    -1,
 	}
 }
 
-func (h *Household) AddMember(m Member) {
-	h.Members = append(h.Members, &m)
+func (h *Household) AddMember(m *Member) {
+	h.Members = append(h.Members, m)
 }
 
-func (h *Household) RemoveMember(m Member) {
+func (h *Household) RemoveMember(m *Member) {
 	for i, hm := range h.Members {
 		if m.TelegramID == hm.TelegramID {
 			h.Members = append(h.Members[:i], h.Members[i+1:]...)
