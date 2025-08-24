@@ -21,6 +21,7 @@ type Server struct {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%v\n", r)
 	s.router.ServeHTTP(w, r)
 }
 
@@ -47,19 +48,11 @@ func NewServer(
 	return s
 }
 
-func healthCheck(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "ok")
-}
-
 func (s *Server) registerRoutes() {
 	s.router.HandleFunc("/", healthCheck)
 	s.router.Handle("/telegram/"+s.config.TelegramRouteSecret, s.telegramHandler)
 }
 
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v\n", r)
-
-		next.ServeHTTP(w, r)
-	})
+func healthCheck(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "ok")
 }
