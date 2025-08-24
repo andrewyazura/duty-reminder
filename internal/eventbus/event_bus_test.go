@@ -12,7 +12,7 @@ func TestSubscribe(t *testing.T) {
 	eb.Subscribe("event-1", func(e Event) {})
 	eb.Subscribe("event-1", func(e Event) {})
 
-	handlers, ok := eb.table["event-1"]
+	handlers, ok := eb.handlers["event-1"]
 	if !ok || len(handlers) != 2 {
 		t.Fatalf("no 'event-1' handlers registered, want 2")
 	}
@@ -20,7 +20,7 @@ func TestSubscribe(t *testing.T) {
 	eb.Subscribe("event-2", func(e Event) {})
 	eb.Subscribe("event-3", func(e Event) {})
 
-	if gotLen := len(eb.table); gotLen != 3 {
+	if gotLen := len(eb.handlers); gotLen != 3 {
 		t.Fatalf("%d event types in table, expected %d", gotLen, 3)
 	}
 }
