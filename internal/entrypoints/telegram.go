@@ -8,13 +8,8 @@ import (
 
 	"github.com/andrewyazura/duty-reminder/internal/config"
 	"github.com/andrewyazura/duty-reminder/internal/eventbus"
+	"github.com/andrewyazura/duty-reminder/internal/telegram"
 )
-
-type TelegramUpdate struct {
-	UpdateID int      `json:"update_id"`
-	Message  *Message `json:"message,omitempty"`
-}
-type Message struct{}
 
 type TelegramWebhookHandler struct {
 	headerSecret string
@@ -45,7 +40,7 @@ func (h TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	var update TelegramUpdate
+	var update telegram.Update
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
