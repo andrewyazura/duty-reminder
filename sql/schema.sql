@@ -8,5 +8,6 @@ CREATE TABLE households (
 CREATE TABLE members (
   household_telegram_id INTEGER NOT NULL REFERENCES households(telegram_id),
   name TEXT NOT NULL
+  order INTEGER NOT NULL,
   telegram_id INTEGER NOT NULL,
 );
