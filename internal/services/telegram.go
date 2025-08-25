@@ -27,7 +27,7 @@ func NewTelegramService(bus *eventbus.EventBus, config *config.TelegramConfig, u
 	}
 }
 
-func (t TelegramService) HandleUpdate(event eventbus.Event) {
+func (t TelegramService) HandleUpdate(ctx context.Context, event eventbus.Event) {
 	update := event.(telegram.Update)
 	message := update.Message
 
@@ -37,7 +37,7 @@ func (t TelegramService) HandleUpdate(event eventbus.Event) {
 
 			// new member is the bot itself
 			if m.ID == t.config.BotID {
-				t.handleNewGroup(message)
+				t.handleNewGroup(ctx, message)
 			}
 		}
 	}
@@ -45,15 +45,15 @@ func (t TelegramService) HandleUpdate(event eventbus.Event) {
 	if message.Entities != nil {
 		for _, e := range message.Entities {
 			if e.Type == "bot_command" {
-				t.handleCommand(message, &e)
+				t.handleCommand(ctx, message, &e)
 			}
 		}
 	}
 }
 
-func (t TelegramService) handleNewGroup(message *telegram.Message) {
-	t.uow.Execute(context.Background(), func(repo storage.HouseholdRepository) error {
-		_, err := repo.FindByID(context.Background(), message.Chat.ID)
+func (t TelegramService) handleNewGroup(ctx context.Context, message *telegram.Message) {
+	t.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+		_, err := repo.FindByID(ctx, message.Chat.ID)
 
 		if err == nil {
 			return nil
@@ -67,31 +67,31 @@ func (t TelegramService) handleNewGroup(message *telegram.Message) {
 			Members:    members,
 		}
 
-		repo.Create(context.Background(), household)
-		t.bus.Publish("HouseholdCreated", household)
+		repo.Create(ctx, household)
+		t.bus.Publish(ctx, "HouseholdCreated", household)
 
 		return nil
 	})
 }
 
-func (t TelegramService) handleCommand(message *telegram.Message, entity *telegram.MessageEntity) {
+func (t TelegramService) handleCommand(ctx context.Context, message *telegram.Message, entity *telegram.MessageEntity) {
 	text := entity.Text(message)
 
 	switch text {
 	case "register":
-		t.addUser(message)
+		t.addUser(ctx, message)
 	case "help":
-		t.help(message)
+		t.help(ctx, message)
 	case "skip":
-		t.skip(message)
+		t.skip(ctx, message)
 	default:
-		t.unknownCommand(message)
+		t.unknownCommand(ctx, message)
 	}
 }
 
-func (t TelegramService) addUser(message *telegram.Message) {
-	t.uow.Execute(context.Background(), func(repo storage.HouseholdRepository) error {
-		household, err := repo.FindByID(context.Background(), message.Chat.ID)
+func (t TelegramService) addUser(ctx context.Context, message *telegram.Message) {
+	t.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+		household, err := repo.FindByID(ctx, message.Chat.ID)
 
 		if err != nil {
 			return err
@@ -101,6 +101,13 @@ func (t TelegramService) addUser(message *telegram.Message) {
 
 		for _, m := range household.Members {
 			if m.TelegramID == user.ID {
+				t.client.SendMessage(
+					ctx,
+					message.Chat.ID,
+					"already registered",
+					telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
+				)
+
 				return nil
 			}
 		}
@@ -112,19 +119,20 @@ func (t TelegramService) addUser(message *telegram.Message) {
 
 		household.AddMember(member)
 
-		repo.Save(context.Background(), household)
+		repo.Save(ctx, household)
 
 		return nil
 	})
 }
 
-func (t TelegramService) help(message *telegram.Message) {
-	t.client.sendMessage(message.Chat.ID, "/register to register in the household")
+func (t TelegramService) help(ctx context.Context, message *telegram.Message) {
+	t.client.SendMessage(ctx, message.Chat.ID, "/register to register in the household")
 }
 
-func (t TelegramService) skip(message *telegram.Message) {
+func (t TelegramService) skip(ctx context.Context, message *telegram.Message) {
+	t.client.SendMessage(ctx, message.Chat.ID, "/skip")
 }
 
-func (t TelegramService) unknownCommand(message *telegram.Message) {
-	t.client.sendMessage(message.Chat.ID, "Unknown command")
+func (t TelegramService) unknownCommand(ctx context.Context, message *telegram.Message) {
+	t.client.SendMessage(ctx, message.Chat.ID, "Unknown command")
 }
