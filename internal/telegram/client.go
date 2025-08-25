@@ -33,13 +33,14 @@ func (c *Client) buildURL(endpoint string) string {
 	return fmt.Sprintf("%s/bot%s/%s", c.config.BaseURL, c.config.APIToken, endpoint)
 }
 
-func (c *Client) PostJSON(ctx context.Context, endpoint string, data any) error {
+func (c *Client) postJSON(ctx context.Context, endpoint string, data any) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(
+	req, err := http.NewRequestWithContext(
+		ctx,
 		"POST",
 		c.buildURL(endpoint),
 		bytes.NewBuffer(jsonData),
@@ -59,6 +60,24 @@ func (c *Client) PostJSON(ctx context.Context, endpoint string, data any) error 
 	var r Response
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c *Client) SendMessage(ctx context.Context, chatID int, text string, opts ...SendMessageOption) error {
+	payload := &sendMessagePayload{
+		ChatID: chatID,
+		Text:   text,
+	}
+
+	for _, opt := range opts {
+		opt(payload)
+	}
+
+	err := c.postJSON(ctx, "sendMessage", payload)
+	if err != nil {
+		return nil
 	}
 
 	return nil

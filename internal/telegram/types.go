@@ -36,3 +36,25 @@ type MessageEntity struct {
 func (e MessageEntity) Text(m *Message) string {
 	return m.Text[e.Offset : e.Offset+e.Length]
 }
+
+type apiResponse struct {
+}
+
+type sendMessagePayload struct {
+	ChatID          int              `json:"chat_id"`
+	Text            string           `json:"text"`
+	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
+}
+
+type replyParameters struct {
+	MessageID int
+	ChatID    int
+}
+
+type SendMessageOption func(*sendMessagePayload)
+
+func WithReplyParameters(messageID int, chatID int) SendMessageOption {
+	return func(p *sendMessagePayload) {
+		p.ReplyParameters = &replyParameters{MessageID: messageID, ChatID: chatID}
+	}
+}
