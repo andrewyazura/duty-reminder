@@ -20,6 +20,7 @@ func NewHousehold() Household {
 }
 
 func (h *Household) AddMember(m *Member) {
+	m.Order = len(h.Members)
 	h.Members = append(h.Members, m)
 }
 
@@ -43,4 +44,5 @@ func (h *Household) PopCurrentMember() *Member {
 type Member struct {
 	Name       string
 	TelegramID int
+	Order      int
 }

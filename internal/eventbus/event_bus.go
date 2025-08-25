@@ -2,13 +2,14 @@
 package eventbus
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 )
 
 type Event any
 type EventType string
-type Handler func(Event)
+type Handler func(context.Context, Event)
 
 type EventBus struct {
 	handlers map[EventType][]Handler
@@ -28,7 +29,7 @@ func (eb *EventBus) Subscribe(eventType EventType, handler Handler) {
 	eb.handlers[eventType] = append(eb.handlers[eventType], handler)
 }
 
-func (eb *EventBus) Publish(eventType EventType, event Event) {
+func (eb *EventBus) Publish(ctx context.Context, eventType EventType, event Event) {
 	eb.lock.RLock()
 	handlersToCall := make([]Handler, 0, len(eb.handlers[eventType]))
 	handlersToCall = append(handlersToCall, eb.handlers[eventType]...)
@@ -42,7 +43,7 @@ func (eb *EventBus) Publish(eventType EventType, event Event) {
 				}
 			}()
 
-			h(event)
+			h(ctx, event)
 		}(handler)
 	}
 }

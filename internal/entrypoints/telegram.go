@@ -46,6 +46,6 @@ func (h TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.eventBus.Publish("TelegramUpdate", update)
+	h.eventBus.Publish(r.Context(), "TelegramUpdate", update)
 	w.WriteHeader(http.StatusOK)
 }
