@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -29,11 +31,12 @@ func getTestClient(t *testing.T) (*Client, *mockHandler, func()) {
 
 	testConfig := config.TelegramConfig{
 		BaseURL:  server.URL,
-		APIToken: "test-token",
+		APIToken: "ABC123",
 		Timeout:  5 * time.Second,
 	}
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	testClient := NewClient(&testConfig)
+	testClient := NewClient(&testConfig, logger)
 
 	teardownFunc := func() {
 		server.Close()
@@ -63,27 +66,26 @@ func TestSendMessage(t *testing.T) {
 				t.Errorf("got endpoint %s, want %s", r.URL.Path, "/sendMessage")
 			}
 
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				t.Fatalf("failed to read request body: %v", err)
-			}
-
-			var payload map[string]any
-			if err := json.Unmarshal(body, &payload); err != nil {
+			var got sendMessagePayload
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
 				t.Fatalf("failed to unmarshal request body: %v", err)
 			}
 
-			if got := int(payload["chat_id"].(float64)); got != want.ChatID {
-				t.Errorf("chat_id is %d, want %d", got, want.ChatID)
+			if got.ChatID != want.ChatID {
+				t.Errorf("chat_id is %d, want %d", got.ChatID, want.ChatID)
 			}
 
-			if got := payload["text"]; got != want.Text {
-				t.Errorf("text is %s, want %s", got, want.Text)
+			if got.Text != want.Text {
+				t.Errorf("text is %s, want %s", got.Text, want.Text)
 			}
 
-			if _, ok := payload["reply_parameters"]; ok {
-				t.Errorf("expected reply_parameters to be ommited")
+			if got.ReplyParameters != nil {
+				t.Errorf("expected reply_parameters to be omitted")
 			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
 		err := client.SendMessage(ctx, want.ChatID, want.Text)
@@ -97,28 +99,72 @@ func TestSendMessage(t *testing.T) {
 		want := replyParameters{123, 12345}
 
 		handler.handler = func(w http.ResponseWriter, r *http.Request) {
-			body, _ := io.ReadAll(r.Body)
-			var payload map[string]any
-			json.Unmarshal(body, &payload)
+			var gotPayload sendMessagePayload
+			if err := json.NewDecoder(r.Body).Decode(&gotPayload); err != nil {
+				t.Fatalf("failed to unmarshal request body: %v", err)
+			}
 
-			got := payload["reply_parameters"].(map[string]int)
+			got := gotPayload.ReplyParameters
 			if got == nil {
 				t.Fatalf("expected reply_parameters to be present")
 			}
 
-			if v := got["message_id"]; v != want.MessageID {
-				t.Errorf("got message_id %d, want %d", v, want.MessageID)
+			if got.MessageID != want.MessageID {
+				t.Errorf("got message_id %d, want %d", got.MessageID, want.MessageID)
 			}
 
-			if v := got["chat_id"]; v != want.ChatID {
-				t.Errorf("got chat_id %d, want %d", v, want.ChatID)
+			if got.ChatID != want.ChatID {
+				t.Errorf("got chat_id %d, want %d", got.ChatID, want.ChatID)
 			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
 		err := client.SendMessage(ctx, 1, "t", WithReplyParameters(want.MessageID, want.ChatID))
 
 		if err != nil {
 			t.Errorf("SendMessage() returned an error: %v", err)
+		}
+	})
+}
+
+func TestGetMe(t *testing.T) {
+	client, handler, teardown := getTestClient(t)
+	defer teardown()
+
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		handler.handler = func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{
+				"ok": true,
+				"result": {
+					"id": 1234,
+					"username": "test_bot",
+					"first_name": "test_first_name",
+					"last_name": "test_last_name"
+				}
+			}`)
+		}
+
+		wantUser := User{
+			ID:        1234,
+			Username:  "test_bot",
+			FirstName: "test_first_name",
+			LastName:  "test_last_name",
+		}
+
+		gotUser, err := client.GetMe(ctx)
+		if err != nil {
+			t.Errorf("GetMe() returned an error: %v", err)
+		}
+
+		if !reflect.DeepEqual(gotUser, &wantUser) {
+			t.Errorf("got %v, want %v", gotUser, &wantUser)
 		}
 	})
 }

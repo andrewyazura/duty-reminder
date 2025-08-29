@@ -16,10 +16,10 @@ type Message struct {
 }
 
 type User struct {
-	ID         int    `json:"id"`
-	Username   string `json:"username"`
-	FirstName  string `json:"first_name"`
-	SecondName string `json:"second_name"`
+	ID        int    `json:"id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type Chat struct {
@@ -35,9 +35,6 @@ type MessageEntity struct {
 
 func (e MessageEntity) Text(m *Message) string {
 	return m.Text[e.Offset : e.Offset+e.Length]
-}
-
-type apiResponse struct {
 }
 
 type sendMessagePayload struct {
