@@ -105,7 +105,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 		FROM members
 		WHERE
 			household_telegram_id = $1
-		ORDER BY "order" DESC
+		ORDER BY "order" ASC
 	`
 
 	rows, err := repo.db.Query(ctx, membersQuery, telegramID)
