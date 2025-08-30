@@ -2,23 +2,55 @@ package storage
 
 import (
 	"context"
+	"log/slog"
 	"os"
+	"reflect"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/andrewyazura/duty-reminder/internal/domain"
+	"github.com/andrewyazura/duty-reminder/internal/testutils"
 )
+
+var tmpDB *testutils.TempPostgresInstance
+
+func TestMain(m *testing.M) {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	tmpDB = testutils.NewTempPostgresInstance(logger, "test-db", "test-user", 5434)
+
+	err := tmpDB.Setup()
+	if err != nil {
+		logger.Error("failed to setup database", "error", err)
+	}
+
+	defer tmpDB.Cleanup()
+
+	m.Run()
+}
+
+func applySchema(db Querier) error {
+	data, err := os.ReadFile("../../sql/schema.sql")
+	if err != nil {
+		return err
+	}
+
+	if _, err := db.Exec(context.Background(), string(data)); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func setupTestDatabase(t *testing.T) (Querier, func()) {
 	t.Helper()
 
-	connection, err := pgx.Connect(context.Background(), os.Getenv("TEST_POSTGRES_URL"))
+	transaction, err := tmpDB.Connection.Begin(context.Background())
 	if err != nil {
-		t.Fatalf("couldn't setup the test database: %v", err)
+		t.Fatalf("failed to start a transaction: %v", err)
 	}
 
-	transaction, err := connection.Begin(context.Background())
-	if err != nil {
-		t.Fatalf("couldn't start a transaction: %v", err)
+	if err := applySchema(transaction); err != nil {
+		t.Fatalf("failed to apply sql schema: %v", err)
 	}
 
 	teardownFunc := func() {
@@ -38,7 +70,47 @@ func TestFindByID(t *testing.T) {
 
 	repo := PostgresHouseholdRepository{db: querier}
 
-	t.Run("", func(t *testing.T) {
-		repo.FindByID(context.Background(), 1)
+	t.Run("success", func(t *testing.T) {
+		want := domain.NewHousehold()
+		want.Checklist = append(want.Checklist, "point 1")
+
+		_, err := querier.Exec(context.Background(), `
+			INSERT INTO households (
+				telegram_id,
+				checklist,
+				crontab,
+				current_member_index
+			) VALUES ($1, $2, $3, $4)`,
+			want.TelegramID,
+			want.Checklist,
+			want.Crontab,
+			want.CurrentMember,
+		)
+
+		if err != nil {
+			t.Fatalf("failed to insert test household into database: %v", err)
+		}
+
+		got, err := repo.FindByID(context.Background(), want.TelegramID)
+
+		if err != nil {
+			t.Fatalf("FindByID returned an error: %v", err)
+		}
+
+		if got == nil {
+			t.Fatalf("expected household with telegram_id %d to exist", 1)
+		}
+
+		if got.Crontab != want.Crontab {
+			t.Errorf("crontab is %s, want %s", got.Crontab, want.Crontab)
+		}
+
+		if got.CurrentMember != want.CurrentMember {
+			t.Errorf("current member index is %d, want %d", got.CurrentMember, want.CurrentMember)
+		}
+
+		if reflect.DeepEqual(got.Checklist, want.Checklist) {
+			t.Errorf("checklist is %v, want %v", got.Checklist, want.Checklist)
+		}
 	})
 }
