@@ -28,19 +28,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func applySchema(db Querier) error {
-	data, err := os.ReadFile("../../sql/schema.sql")
-	if err != nil {
-		return err
-	}
-
-	if _, err := db.Exec(context.Background(), string(data)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func setupTestDatabase(t *testing.T) (Querier, func()) {
 	t.Helper()
 
@@ -64,6 +51,19 @@ func setupTestDatabase(t *testing.T) (Querier, func()) {
 	return transaction, teardownFunc
 }
 
+func applySchema(db Querier) error {
+	data, err := os.ReadFile("../../sql/schema.sql")
+	if err != nil {
+		return err
+	}
+
+	if _, err := db.Exec(context.Background(), string(data)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func TestFindByID(t *testing.T) {
 	querier, teardownFunc := setupTestDatabase(t)
 	defer teardownFunc()
@@ -72,6 +72,7 @@ func TestFindByID(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		want := domain.NewHousehold()
+		want.TelegramID = 0
 		want.Checklist = append(want.Checklist, "point 1")
 
 		_, err := querier.Exec(context.Background(), `

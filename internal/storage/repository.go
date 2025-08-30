@@ -20,6 +20,8 @@ type Querier interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+
+	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
 }
 
 type PostgresHouseholdRepository struct {
@@ -73,6 +75,36 @@ func (repo PostgresHouseholdRepository) Save(ctx context.Context, h *domain.Hous
 	)
 
 	if err != nil {
+		return err
+	}
+
+	deleteMembersQuery := `
+		DELETE FROM members WHERE household_telegram_id = $1
+	`
+
+	if _, err := repo.db.Exec(ctx, deleteMembersQuery, h.TelegramID); err != nil {
+		return err
+	}
+
+	if len(h.Members) == 0 {
+		return nil
+	}
+
+	rows := make([][]any, len(h.Members))
+	for i, m := range h.Members {
+		rows[i] = []any{
+			m.TelegramID,
+			m.Name,
+			m.Order,
+		}
+	}
+
+	if _, err := repo.db.CopyFrom(
+		ctx,
+		pgx.Identifier{"members"},
+		[]string{"telegram_id", "name", "order"},
+		pgx.CopyFromRows(rows),
+	); err != nil {
 		return err
 	}
 
