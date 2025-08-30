@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/andrewyazura/duty-reminder/internal/config"
 	"github.com/andrewyazura/duty-reminder/internal/domain"
@@ -18,11 +19,16 @@ type TelegramService struct {
 	uow    UnitOfWork
 }
 
-func NewTelegramService(bus *eventbus.EventBus, config *config.TelegramConfig, uow UnitOfWork) *TelegramService {
+func NewTelegramService(
+	bus *eventbus.EventBus,
+	config *config.TelegramConfig,
+	logger *slog.Logger,
+	uow UnitOfWork,
+) *TelegramService {
 	return &TelegramService{
 		bus:    bus,
 		config: config,
-		client: telegram.NewClient(config),
+		client: telegram.NewClient(config, logger),
 		uow:    uow,
 	}
 }
@@ -59,12 +65,8 @@ func (t TelegramService) handleNewGroup(ctx context.Context, message *telegram.M
 			return nil
 		}
 
-		// request members
-		members := make([]*domain.Member, 0)
-
 		household := &domain.Household{
 			TelegramID: message.Chat.ID,
-			Members:    members,
 		}
 
 		repo.Create(ctx, household)
@@ -79,7 +81,7 @@ func (t TelegramService) handleCommand(ctx context.Context, message *telegram.Me
 
 	switch text {
 	case "register":
-		t.addUser(ctx, message)
+		t.register(ctx, message)
 	case "help":
 		t.help(ctx, message)
 	case "skip":
@@ -89,7 +91,7 @@ func (t TelegramService) handleCommand(ctx context.Context, message *telegram.Me
 	}
 }
 
-func (t TelegramService) addUser(ctx context.Context, message *telegram.Message) {
+func (t TelegramService) register(ctx context.Context, message *telegram.Message) {
 	t.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
 		household, err := repo.FindByID(ctx, message.Chat.ID)
 
@@ -114,7 +116,7 @@ func (t TelegramService) addUser(ctx context.Context, message *telegram.Message)
 
 		member := &domain.Member{
 			TelegramID: user.ID,
-			Name:       user.FirstName + " " + user.SecondName,
+			Name:       user.FirstName + " " + user.LastName,
 		}
 
 		household.AddMember(member)

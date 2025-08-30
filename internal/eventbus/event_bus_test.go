@@ -2,13 +2,16 @@ package eventbus
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"testing"
 )
 
 func TestSubscribe(t *testing.T) {
-	eb := NewEventBus()
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	eb := NewEventBus(logger)
 
 	a := func(ctx context.Context, e Event) {}
 	eb.Subscribe("event-1", a)
@@ -28,7 +31,8 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
-	eb := NewEventBus()
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	eb := NewEventBus(logger)
 	var count atomic.Int32
 
 	var wg sync.WaitGroup

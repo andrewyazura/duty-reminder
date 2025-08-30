@@ -15,6 +15,7 @@ import (
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	config, err := config.NewConfig()
 	if err != nil {
@@ -27,9 +28,9 @@ func main() {
 	}
 
 	uow := services.NewPostgresUnitOfWork(pool)
-	eventBus := eventbus.NewEventBus()
+	eventBus := eventbus.NewEventBus(logger)
 
-	telegramService := services.NewTelegramService(eventBus, &config.Telegram, uow)
+	telegramService := services.NewTelegramService(eventBus, &config.Telegram, logger, uow)
 	eventBus.Subscribe("TelegramUpdate", telegramService.HandleUpdate)
 
 	server := routes.NewServer(config.Server, config.Telegram, logger, eventBus)
