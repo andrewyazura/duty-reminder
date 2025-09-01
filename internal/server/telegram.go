@@ -1,5 +1,4 @@
-// Package entrypoints
-package entrypoints
+package server
 
 import (
 	"encoding/json"

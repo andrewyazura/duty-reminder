@@ -1,5 +1,5 @@
-// Package routes
-package routes
+// Package server
+package server
 
 import (
 	"io"
@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/andrewyazura/duty-reminder/internal/config"
-	"github.com/andrewyazura/duty-reminder/internal/entrypoints"
 	"github.com/andrewyazura/duty-reminder/internal/eventbus"
 )
 
@@ -17,7 +16,7 @@ type Server struct {
 	logger          *slog.Logger
 	bus             *eventbus.EventBus
 	router          *http.ServeMux
-	telegramHandler *entrypoints.TelegramWebhookHandler
+	telegramHandler *TelegramWebhookHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +38,7 @@ func NewServer(
 	}
 
 	s.registerRoutes()
-	s.telegramHandler = entrypoints.NewTelegramWebhookHandler(
+	s.telegramHandler = NewTelegramWebhookHandler(
 		telegramConfig,
 		logger,
 		bus,
