@@ -162,4 +162,6 @@ func (n NotificationScheduler) deleteHouseholdJob(ctx context.Context, event eve
 			"error", err,
 		)
 	}
+
+	delete(n.householdJobs, h.TelegramID)
 }
