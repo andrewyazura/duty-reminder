@@ -41,7 +41,10 @@ func NewTelegramService(
 	return s
 }
 
-func (s TelegramService) HandleUpdate(ctx context.Context, event eventbus.Event) {
+func (s TelegramService) HandleUpdate(
+	ctx context.Context,
+	event eventbus.Event,
+) {
 	update := event.(telegram.Update)
 	message := update.Message
 
@@ -70,7 +73,10 @@ func (s TelegramService) HandleUpdate(ctx context.Context, event eventbus.Event)
 	}
 }
 
-func (s TelegramService) handleNewGroup(ctx context.Context, message *telegram.Message) {
+func (s TelegramService) handleNewGroup(
+	ctx context.Context,
+	message *telegram.Message,
+) {
 	var household *domain.Household
 
 	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
@@ -98,7 +104,11 @@ func (s TelegramService) handleNewGroup(ctx context.Context, message *telegram.M
 	s.bus.Publish(ctx, "HouseholdCreated", household)
 }
 
-func (s TelegramService) handleCommand(ctx context.Context, message *telegram.Message, entity *telegram.MessageEntity) {
+func (s TelegramService) handleCommand(
+	ctx context.Context,
+	message *telegram.Message,
+	entity *telegram.MessageEntity,
+) {
 	command := entity.Text(message)
 
 	switch command {
@@ -115,7 +125,10 @@ func (s TelegramService) handleCommand(ctx context.Context, message *telegram.Me
 	}
 }
 
-func (s TelegramService) register(ctx context.Context, message *telegram.Message) {
+func (s TelegramService) register(
+	ctx context.Context,
+	message *telegram.Message,
+) {
 	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
 		household, err := repo.FindByID(ctx, message.Chat.ID)
 
@@ -155,7 +168,10 @@ func (s TelegramService) register(ctx context.Context, message *telegram.Message
 	}
 }
 
-func (s TelegramService) setSchedule(ctx context.Context, message *telegram.Message) {
+func (s TelegramService) setSchedule(
+	ctx context.Context,
+	message *telegram.Message,
+) {
 	parts := strings.Split(message.Text, " ")
 
 	if len(parts) == 1 {

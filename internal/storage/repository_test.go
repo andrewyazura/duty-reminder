@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
 	"reflect"
@@ -14,7 +15,7 @@ import (
 var tmpDB *testutils.TempPostgresInstance
 
 func TestMain(m *testing.M) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	tmpDB = testutils.NewTempPostgresInstance(logger, "test-db", "test-user", 5434)
 

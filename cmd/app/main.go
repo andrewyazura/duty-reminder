@@ -35,13 +35,13 @@ func main() {
 	services.NewTelegramService(eventBus, &config.Telegram, logger, uow)
 	services.NewDutyService(eventBus, &config.Telegram, logger, uow)
 
-	scheduler, err := scheduler.New(eventBus, logger, uow)
+	s, err := scheduler.New(eventBus, logger, uow)
 	if err != nil {
 		panic(err)
 	}
 
-	scheduler.Start()
-	defer scheduler.Shutdown()
+	s.Start()
+	defer s.Shutdown()
 
 	server := server.NewServer(config.Server, config.Telegram, logger, eventBus)
 
