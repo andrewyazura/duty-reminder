@@ -13,7 +13,9 @@ import (
 type HouseholdRepository interface {
 	Create(ctx context.Context, h *domain.Household) error
 	Save(ctx context.Context, h *domain.Household) error
+	SaveWithMembers(ctx context.Context, h *domain.Household) error
 	FindByID(ctx context.Context, telegramID int) (*domain.Household, error)
+	GetSchedules(ctx context.Context) ([]*domain.Household, error)
 }
 
 type Querier interface {
@@ -73,6 +75,16 @@ func (repo PostgresHouseholdRepository) Save(ctx context.Context, h *domain.Hous
 		h.CurrentMember,
 		h.TelegramID,
 	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo PostgresHouseholdRepository) SaveWithMembers(ctx context.Context, h *domain.Household) error {
+	err := repo.Save(ctx, h)
 
 	if err != nil {
 		return err
@@ -159,4 +171,37 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 	}
 
 	return h, nil
+}
+
+func (repo PostgresHouseholdRepository) GetSchedules(ctx context.Context) ([]*domain.Household, error) {
+	householdsQuery := `
+		SELECT
+			telegram_id,
+			checklist,
+			crontab
+		FROM households
+	`
+
+	rows, err := repo.db.Query(ctx, householdsQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	var households []*domain.Household
+	for rows.Next() {
+		h := &domain.Household{}
+		err := rows.Scan(&h.TelegramID, &h.Checklist, &h.Crontab)
+
+		if err != nil {
+			return nil, err
+		}
+
+		households = append(households, h)
+	}
+
+	if err := rows.Err(); err != nil {
+		return households, err
+	}
+
+	return households, nil
 }
