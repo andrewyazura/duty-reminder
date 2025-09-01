@@ -105,6 +105,7 @@ func (repo PostgresHouseholdRepository) SaveWithMembers(ctx context.Context, h *
 	rows := make([][]any, len(h.Members))
 	for i, m := range h.Members {
 		rows[i] = []any{
+			h.TelegramID,
 			m.TelegramID,
 			m.Name,
 			m.Order,
@@ -114,7 +115,12 @@ func (repo PostgresHouseholdRepository) SaveWithMembers(ctx context.Context, h *
 	if _, err := repo.db.CopyFrom(
 		ctx,
 		pgx.Identifier{"members"},
-		[]string{"telegram_id", "name", "order"},
+		[]string{
+			"household_telegram_id",
+			"telegram_id",
+			"name",
+			"order",
+		},
 		pgx.CopyFromRows(rows),
 	); err != nil {
 		return err
@@ -145,7 +151,8 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 	membersQuery := `
 		SELECT
 			telegram_id,
-			name
+			name,
+			"order"
 		FROM members
 		WHERE
 			household_telegram_id = $1
@@ -163,7 +170,7 @@ func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID
 	h.Members = []*domain.Member{}
 	for rows.Next() {
 		member := &domain.Member{}
-		if err := rows.Scan(&member.TelegramID, &member.Name); err != nil {
+		if err := rows.Scan(&member.TelegramID, &member.Name, &member.Order); err != nil {
 			return nil, err
 		}
 
