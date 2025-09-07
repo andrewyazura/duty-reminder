@@ -101,6 +101,9 @@ func (s TelegramService) handleNewGroup(
 		return
 	}
 
+	s.client.SendMessage(ctx, message.Chat.ID, `
+		hey! group chat was successfully added. to register as a member, please use /register
+	`)
 	s.bus.Publish(ctx, "HouseholdCreated", household)
 }
 
