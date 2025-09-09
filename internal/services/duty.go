@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/andrewyazura/duty-reminder/internal/config"
 	"github.com/andrewyazura/duty-reminder/internal/domain"
 	"github.com/andrewyazura/duty-reminder/internal/eventbus"
+	"github.com/andrewyazura/duty-reminder/internal/storage"
 	"github.com/andrewyazura/duty-reminder/internal/telegram"
 )
 
@@ -36,6 +38,24 @@ func NewDutyService(
 
 func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) {
 	h := event.(domain.Household)
+	var household *domain.Household
 
-	s.client.SendMessage(ctx, h.TelegramID, "Go clean")
+	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+		var err error
+		household, err = repo.FindByID(ctx, h.TelegramID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		s.logger.Error("something went wrong", "error", err)
+	}
+
+	m := household.PopCurrentMember()
+
+	s.client.SendMessage(ctx, h.TelegramID, fmt.Sprintf("It's %s's turn to clean this week", m.Name))
 }
