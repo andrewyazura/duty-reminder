@@ -71,10 +71,11 @@
 
                 ExecStart =
                   "${self.packages.${system}.default}/bin/duty-reminder";
-                Environment = lib.mkIf cfg.environmentFile cfg.environmentFile;
 
                 Type = "simple";
                 Restart = "on-failure";
+              } // lib.optionalAttrs (cfg.environmentFile != null) {
+                EnvironmentFile = cfg.environmentFile;
               };
             };
           };
