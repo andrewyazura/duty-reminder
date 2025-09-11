@@ -11,13 +11,15 @@
         src = ./.;
         vendorHash = "sha256-Qk4HXQ4RT7Glsrb/uo2iZEJj8c7SCnsBTY2a0LmD+vw=";
 
-        CGO_ENABLED = 0;
         ldflags = [ "-s" "-w" ];
+        env.CGO_ENABLED = 0;
         meta.mainProgram = "duty-reminder";
       };
     in {
-      packages.${system}.default = duty-reminder;
-      packages.${system}.duty-reminder = duty-reminder;
+      packages.${system} = {
+        default = duty-reminder;
+        duty-reminder = duty-reminder;
+      };
 
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [ go gopls gotools go-tools postgresql ];
@@ -34,7 +36,17 @@
           options.services.duty-reminder = {
             enable = lib.mkEnableOption "Enable duty-reminder service";
 
-            port = lib.mkOption { };
+            environment = lib.mkOption {
+              type = lib.types.attrsOf lib.types.str;
+              default = { };
+              description = "Environment variables passed to the service";
+            };
+
+            environmentFile = lib.mkOption {
+              type = lib.types.nullOr lib.types.path;
+              default = null;
+              description = "Optional .env file with secrets";
+            };
           };
 
           config = lib.mkIf cfg.enable {
@@ -59,6 +71,7 @@
 
                 ExecStart =
                   "${self.packages.${system}.default}/bin/duty-reminder";
+                Environment = lib.mkIf cfg.environmentFile cfg.environmentFile;
 
                 Type = "simple";
                 Restart = "on-failure";
