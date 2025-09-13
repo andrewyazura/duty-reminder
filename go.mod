@@ -7,7 +7,6 @@ toolchain go1.24.5
 require (
 	github.com/go-co-op/gocron/v2 v2.16.4
 	github.com/jackc/pgx/v5 v5.7.5
-	github.com/joho/godotenv v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
 )
 

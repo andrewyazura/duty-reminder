@@ -6,8 +6,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -34,11 +32,6 @@ type TelegramConfig struct {
 }
 
 func NewConfig() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
 	config := &Config{
 		Server: ServerConfig{
 			Port:                "8080",

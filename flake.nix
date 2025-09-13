@@ -69,8 +69,7 @@
                 User = "duty-reminder";
                 Group = "duty-reminder";
 
-                ExecStart =
-                  "${self.packages.${system}.default}/bin/app";
+                ExecStart = "${self.packages.${system}.default}/bin/app";
 
                 Type = "simple";
                 Restart = "on-failure";
