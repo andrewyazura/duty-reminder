@@ -37,12 +37,13 @@ func NewServer(
 		router: http.NewServeMux(),
 	}
 
-	s.registerRoutes()
 	s.telegramHandler = NewTelegramWebhookHandler(
 		telegramConfig,
 		logger,
 		bus,
 	)
+
+	s.registerRoutes()
 
 	return s
 }
