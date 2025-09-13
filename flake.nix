@@ -70,7 +70,7 @@
                 Group = "duty-reminder";
 
                 ExecStart =
-                  "${self.packages.${system}.default}/bin/duty-reminder";
+                  "${self.packages.${system}.default}/bin/app";
 
                 Type = "simple";
                 Restart = "on-failure";
