@@ -9,7 +9,7 @@
         pname = "duty-reminder";
         version = self.shortRev or "dev";
         src = ./.;
-        vendorHash = "sha256-Qk4HXQ4RT7Glsrb/uo2iZEJj8c7SCnsBTY2a0LmD+vw=";
+        vendorHash = "sha256-fUPMWIlwiM5npTZtHuzIy+MHWQoLyPTH0M28zr99rhM=";
 
         ldflags = [ "-s" "-w" ];
         env.CGO_ENABLED = 0;
