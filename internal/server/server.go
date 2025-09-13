@@ -3,7 +3,6 @@ package server
 
 import (
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -20,7 +19,6 @@ type Server struct {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%v\n", r)
 	s.router.ServeHTTP(w, r)
 }
 

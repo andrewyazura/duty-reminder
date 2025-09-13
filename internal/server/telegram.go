@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -45,6 +46,6 @@ func (h TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.eventBus.Publish(r.Context(), "TelegramUpdate", update)
+	h.eventBus.Publish(context.Background(), "TelegramUpdate", update)
 	w.WriteHeader(http.StatusOK)
 }
