@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -45,7 +46,7 @@ func main() {
 
 	server := server.NewServer(config.Server, config.Telegram, logger, eventBus)
 
-	logger.Info("starting server on port 8080")
+	logger.Info(fmt.Sprintf("starting server on port %s", config.Server.Port))
 
 	if err := http.ListenAndServe(":"+config.Server.Port, server); err != nil {
 		logger.Error("server failed to start")
