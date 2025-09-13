@@ -1,5 +1,5 @@
 {
-  description = "telegram bot for reminding roommates about cleaning duties";
+  description = "Telegram bot for reminding roommates about cleaning duties";
   inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
   outputs = { self, nixpkgs }:
     let
@@ -27,7 +27,7 @@
 
       apps.${system}.default = {
         type = "app";
-        program = "${self.packages.${system}.default}/bin/duty-reminder";
+        program = "${self.packages.${system}.default}/bin/app";
       };
 
       nixosModules.default = { lib, config, ... }:
