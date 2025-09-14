@@ -197,16 +197,16 @@ func (s *TelegramService) setSchedule(
 	parts := strings.Split(message.Text, " ")
 
 	if len(parts) == 1 {
-		s.client.SendMessage(ctx, message.Chat.ID, "no args, usage: /setSchedule 0 9 * * 5")
+		s.client.SendMessage(ctx, message.Chat.ID, "You didn't provide any arguments. Correct usage: /setSchedule 0 9 * * 5")
 		return
 	}
 
-	newCrontab := parts[1]
+	newCrontab := strings.Join(parts[1:], " ")
 	s.logger.Debug("new crontab provided", "crontab", newCrontab)
 
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, err := cronParser.Parse(newCrontab); err != nil {
-		s.client.SendMessage(ctx, message.Chat.ID, "invalid crontab string, example: 0 9 * * 5")
+		s.client.SendMessage(ctx, message.Chat.ID, "The crontab string you've provided is invalid. Correct example: 0 9 * * 5")
 		return
 	}
 
