@@ -50,7 +50,7 @@ func (s *TelegramService) HandleUpdate(
 
 	message := update.Message
 
-	if message.Chat.Type != "group" {
+	if t := message.Chat.Type; t != "group" && t != "supergroup" {
 		s.client.SendMessage(ctx, message.Chat.ID, "Sorry, I only work in groups")
 		return
 	}
