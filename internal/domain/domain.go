@@ -9,13 +9,13 @@ type Household struct {
 	TelegramID    int
 }
 
-func NewHousehold() Household {
-	return Household{
+func NewHousehold(telegramID int) *Household {
+	return &Household{
 		Checklist:     []string{},
 		Crontab:       "0 9 * * 6", // at 9:00 on Saturday
 		CurrentMember: 0,
 		Members:       []*Member{},
-		TelegramID:    -1,
+		TelegramID:    telegramID,
 	}
 }
 

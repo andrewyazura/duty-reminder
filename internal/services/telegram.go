@@ -90,9 +90,7 @@ func (s *TelegramService) handleNewGroup(
 			return nil
 		}
 
-		household = &domain.Household{
-			TelegramID: message.Chat.ID,
-		}
+		household = domain.NewHousehold(message.Chat.ID)
 
 		repo.Create(ctx, household)
 		s.bus.Publish(ctx, "HouseholdCreated", household)

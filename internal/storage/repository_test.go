@@ -75,7 +75,7 @@ func TestFindByID(t *testing.T) {
 	repo := PostgresHouseholdRepository{db: querier}
 
 	t.Run("success", func(t *testing.T) {
-		want := domain.NewHousehold()
+		want := domain.NewHousehold(-1)
 		want.TelegramID = 0
 		want.Checklist = append(want.Checklist, "point 1")
 
@@ -120,7 +120,7 @@ func TestFindByID(t *testing.T) {
 	})
 
 	t.Run("success with members", func(t *testing.T) {
-		want := domain.NewHousehold()
+		want := domain.NewHousehold(-1)
 		want.TelegramID = 1
 		want.Checklist = append(want.Checklist, "point 1")
 
@@ -188,7 +188,7 @@ func TestSaveWithMembers(t *testing.T) {
 	repo := PostgresHouseholdRepository{db: querier}
 
 	t.Run("success", func(t *testing.T) {
-		want := domain.NewHousehold()
+		want := domain.NewHousehold(-1)
 		want.TelegramID = 1
 		want.Checklist = append(want.Checklist, "point 1")
 
@@ -234,7 +234,7 @@ func TestSaveWithMembers(t *testing.T) {
 		want.AddMember(&domain.Member{Name: "test2", TelegramID: 2, Order: 2})
 		want.AddMember(&domain.Member{Name: "test3", TelegramID: 3, Order: 3})
 
-		err = repo.SaveWithMembers(ctx, &want)
+		err = repo.SaveWithMembers(ctx, want)
 		if err != nil {
 			t.Fatalf("SaveWithMembers() failed: %v", err)
 		}
@@ -262,13 +262,13 @@ func TestGetSchedules(t *testing.T) {
 	repo := PostgresHouseholdRepository{db: querier}
 
 	t.Run("success", func(t *testing.T) {
-		h1 := domain.NewHousehold()
+		h1 := domain.NewHousehold(-1)
 		h1.TelegramID = 1
 
-		h2 := domain.NewHousehold()
+		h2 := domain.NewHousehold(-1)
 		h2.TelegramID = 2
 
-		households := []*domain.Household{&h1, &h2}
+		households := []*domain.Household{h1, h2}
 
 		for _, h := range households {
 			_, err := querier.Exec(ctx, `
