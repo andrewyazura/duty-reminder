@@ -52,8 +52,8 @@ type sendMessagePayload struct {
 }
 
 type replyParameters struct {
-	MessageID int64
-	ChatID    int64
+	MessageID int64 `json:"message_id"`
+	ChatID    int64 `json:"chat_id"`
 }
 
 type SendMessageOption func(*sendMessagePayload)
