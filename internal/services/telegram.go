@@ -41,7 +41,7 @@ func NewTelegramService(
 	return s
 }
 
-func (s TelegramService) HandleUpdate(
+func (s *TelegramService) HandleUpdate(
 	ctx context.Context,
 	event eventbus.Event,
 ) {
@@ -73,7 +73,7 @@ func (s TelegramService) HandleUpdate(
 	}
 }
 
-func (s TelegramService) handleNewGroup(
+func (s *TelegramService) handleNewGroup(
 	ctx context.Context,
 	message *telegram.Message,
 ) {
@@ -107,7 +107,7 @@ func (s TelegramService) handleNewGroup(
 	s.bus.Publish(ctx, "HouseholdCreated", household)
 }
 
-func (s TelegramService) handleCommand(
+func (s *TelegramService) handleCommand(
 	ctx context.Context,
 	message *telegram.Message,
 	entity *telegram.MessageEntity,
@@ -128,7 +128,7 @@ func (s TelegramService) handleCommand(
 	}
 }
 
-func (s TelegramService) register(
+func (s *TelegramService) register(
 	ctx context.Context,
 	message *telegram.Message,
 ) {
@@ -171,7 +171,7 @@ func (s TelegramService) register(
 	}
 }
 
-func (s TelegramService) setSchedule(
+func (s *TelegramService) setSchedule(
 	ctx context.Context,
 	message *telegram.Message,
 ) {
@@ -209,14 +209,14 @@ func (s TelegramService) setSchedule(
 	s.client.SendMessage(ctx, message.Chat.ID, "new crontab string saved")
 }
 
-func (s TelegramService) help(ctx context.Context, message *telegram.Message) {
+func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
 	s.client.SendMessage(ctx, message.Chat.ID, "/register to register in the household")
 }
 
-func (s TelegramService) skip(ctx context.Context, message *telegram.Message) {
+func (s *TelegramService) skip(ctx context.Context, message *telegram.Message) {
 	s.client.SendMessage(ctx, message.Chat.ID, "/skip")
 }
 
-func (s TelegramService) unknownCommand(ctx context.Context, message *telegram.Message) {
+func (s *TelegramService) unknownCommand(ctx context.Context, message *telegram.Message) {
 	s.client.SendMessage(ctx, message.Chat.ID, "Unknown command")
 }
