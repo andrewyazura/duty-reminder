@@ -1,6 +1,8 @@
 // Package telegram
 package telegram
 
+import "strings"
+
 type Update struct {
 	UpdateID int      `json:"update_id"`
 	Message  *Message `json:"message,omitempty"`
@@ -34,7 +36,13 @@ type MessageEntity struct {
 }
 
 func (e MessageEntity) Text(m *Message) string {
-	return m.Text[e.Offset : e.Offset+e.Length]
+	text := m.Text[e.Offset+1 : e.Offset+e.Length]
+
+	if i := strings.Index(text, "@"); i > -1 {
+		text = text[0:i]
+	}
+
+	return text
 }
 
 type sendMessagePayload struct {

@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -107,9 +108,14 @@ func (s *TelegramService) handleNewGroup(
 		return
 	}
 
-	s.client.SendMessage(ctx, message.Chat.ID, `
-		hey! group chat was successfully added. to register as a member, please use /register
-	`)
+	s.client.SendMessage(ctx, message.Chat.ID, fmt.Sprintf(`
+		Hey! Group chat was successfully added.
+
+		Your current schedule is %s
+
+		To register as a member, please use /register
+	`, household.Crontab))
+
 	s.bus.Publish(ctx, "HouseholdCreated", household)
 }
 
