@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -162,7 +163,7 @@ func (s *TelegramService) register(
 					telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 				)
 
-				return nil
+				return errors.New("member already exists")
 			}
 		}
 
@@ -177,16 +178,16 @@ func (s *TelegramService) register(
 		return nil
 	})
 
+	if err != nil {
+		s.logger.Error("something went wrong", "error", err)
+	}
+
 	s.client.SendMessage(
 		ctx,
 		message.Chat.ID,
 		"successfully registered",
 		telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 	)
-
-	if err != nil {
-		s.logger.Error("something went wrong", "error", err)
-	}
 }
 
 func (s *TelegramService) setSchedule(
@@ -207,7 +208,7 @@ func (s *TelegramService) setSchedule(
 		return
 	}
 
-	s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
 		h, err := repo.FindByID(ctx, message.Chat.ID)
 		if err != nil {
 			return err
@@ -222,6 +223,10 @@ func (s *TelegramService) setSchedule(
 
 		return nil
 	})
+
+	if err != nil {
+		s.logger.Error("something went wrong", "error", err)
+	}
 
 	s.client.SendMessage(ctx, message.Chat.ID, "new crontab string saved")
 }
