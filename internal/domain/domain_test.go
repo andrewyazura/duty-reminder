@@ -3,7 +3,7 @@ package domain
 import "testing"
 
 func TestAddMember(t *testing.T) {
-	h := NewHousehold(-1)
+	h := NewHousehold(-1234567898765)
 	alice := Member{Name: "Alice", TelegramID: 1}
 	bob := Member{Name: "Bob", TelegramID: 2}
 
@@ -29,7 +29,7 @@ func TestAddMember(t *testing.T) {
 }
 
 func TestRemoveMember(t *testing.T) {
-	h := NewHousehold(-1)
+	h := NewHousehold(-1234567898765)
 
 	alice := Member{Name: "Alice", TelegramID: 1}
 	bob := Member{Name: "Bob", TelegramID: 2}
@@ -62,7 +62,7 @@ func TestRemoveMember(t *testing.T) {
 }
 
 func TestPopCurrentMember(t *testing.T) {
-	h := NewHousehold(-1)
+	h := NewHousehold(-1234567898765)
 
 	alice := Member{Name: "Alice", TelegramID: 1}
 	bob := Member{Name: "Bob", TelegramID: 2}

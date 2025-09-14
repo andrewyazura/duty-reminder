@@ -22,7 +22,7 @@ func (repo *mockHouseholdRepo) Save(ctx context.Context, h *domain.Household) er
 func (repo *mockHouseholdRepo) SaveWithMembers(ctx context.Context, h *domain.Household) error {
 	return nil
 }
-func (repo *mockHouseholdRepo) FindByID(ctx context.Context, telegramID int) (*domain.Household, error) {
+func (repo *mockHouseholdRepo) FindByID(ctx context.Context, telegramID int64) (*domain.Household, error) {
 	return nil, nil
 }
 
@@ -100,7 +100,7 @@ func TestEvents(t *testing.T) {
 
 	t.Run("HouseholdCreated", func(t *testing.T) {
 		jobsBefore := len(s.scheduler.Jobs())
-		h := &domain.Household{TelegramID: 1, Crontab: "0 9 * * *"}
+		h := &domain.Household{TelegramID: -1234567898765, Crontab: "0 9 * * *"}
 
 		s.createHouseholdJob(context.Background(), h)
 
@@ -110,7 +110,7 @@ func TestEvents(t *testing.T) {
 	})
 
 	t.Run("HouseholdUpdated", func(t *testing.T) {
-		h := &domain.Household{TelegramID: 1, Crontab: "0 9 * * *"}
+		h := &domain.Household{TelegramID: -1234567898765, Crontab: "0 9 * * *"}
 		s.createHouseholdJob(context.Background(), h)
 		initialJob, ok := s.householdJobs[h.TelegramID]
 		if !ok {
@@ -131,7 +131,7 @@ func TestEvents(t *testing.T) {
 	})
 
 	t.Run("HouseholdDeleted", func(t *testing.T) {
-		h := &domain.Household{TelegramID: 1, Crontab: "0 9 * * *"}
+		h := &domain.Household{TelegramID: -1234567898765, Crontab: "0 9 * * *"}
 		s.createHouseholdJob(context.Background(), h)
 		jobsBefore := len(s.scheduler.Jobs())
 

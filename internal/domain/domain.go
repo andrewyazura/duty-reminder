@@ -6,10 +6,10 @@ type Household struct {
 	Crontab       string
 	CurrentMember int
 	Members       []*Member
-	TelegramID    int
+	TelegramID    int64
 }
 
-func NewHousehold(telegramID int) *Household {
+func NewHousehold(telegramID int64) *Household {
 	return &Household{
 		Checklist:     []string{},
 		Crontab:       "0 9 * * 6", // at 9:00 on Saturday
@@ -24,9 +24,9 @@ func (h *Household) AddMember(m *Member) {
 	h.Members = append(h.Members, m)
 }
 
-func (h *Household) RemoveMember(telegramID int) {
-	for i, hm := range h.Members {
-		if telegramID == hm.TelegramID {
+func (h *Household) RemoveMember(telegramID int64) {
+	for i, m := range h.Members {
+		if telegramID == m.TelegramID {
 			h.Members = append(h.Members[:i], h.Members[i+1:]...)
 			return
 		}
@@ -43,6 +43,6 @@ func (h *Household) PopCurrentMember() *Member {
 
 type Member struct {
 	Name       string
-	TelegramID int
+	TelegramID int64
 	Order      int
 }

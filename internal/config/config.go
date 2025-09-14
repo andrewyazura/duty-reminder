@@ -28,7 +28,7 @@ type DatabaseConfig struct {
 type TelegramConfig struct {
 	APIToken     string
 	BaseURL      string
-	BotID        int
+	BotID        int64
 	HeaderSecret string
 	Timeout      time.Duration
 }
@@ -44,7 +44,7 @@ func NewConfig() (*Config, error) {
 		Telegram: TelegramConfig{
 			APIToken:     "token",
 			BaseURL:      "https://api.telegram.org",
-			BotID:        1234,
+			BotID:        0,
 			HeaderSecret: "secret",
 			Timeout:      30 * time.Second,
 		},
@@ -89,7 +89,7 @@ func NewConfig() (*Config, error) {
 	}
 
 	if v := os.Getenv("TELEGRAM_BOT_ID"); v != "" {
-		i, err := strconv.Atoi(v)
+		i, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			log.Fatalf("invalid config param TELEGRAM_BOT_ID: %v", err)
 		}

@@ -14,7 +14,7 @@ type HouseholdRepository interface {
 	Create(ctx context.Context, h *domain.Household) error
 	Save(ctx context.Context, h *domain.Household) error
 	SaveWithMembers(ctx context.Context, h *domain.Household) error
-	FindByID(ctx context.Context, telegramID int) (*domain.Household, error)
+	FindByID(ctx context.Context, telegramID int64) (*domain.Household, error)
 	GetSchedules(ctx context.Context) ([]*domain.Household, error)
 }
 
@@ -129,7 +129,7 @@ func (repo PostgresHouseholdRepository) SaveWithMembers(ctx context.Context, h *
 	return nil
 }
 
-func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID int) (*domain.Household, error) {
+func (repo PostgresHouseholdRepository) FindByID(ctx context.Context, telegramID int64) (*domain.Household, error) {
 	householdQuery := `
 		SELECT 
 			checklist,

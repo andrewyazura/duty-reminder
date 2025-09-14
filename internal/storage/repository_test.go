@@ -75,8 +75,7 @@ func TestFindByID(t *testing.T) {
 	repo := PostgresHouseholdRepository{db: querier}
 
 	t.Run("success", func(t *testing.T) {
-		want := domain.NewHousehold(-1)
-		want.TelegramID = 0
+		want := domain.NewHousehold(-1234567898765)
 		want.Checklist = append(want.Checklist, "point 1")
 
 		_, err := querier.Exec(ctx, `
@@ -120,8 +119,7 @@ func TestFindByID(t *testing.T) {
 	})
 
 	t.Run("success with members", func(t *testing.T) {
-		want := domain.NewHousehold(-1)
-		want.TelegramID = 1
+		want := domain.NewHousehold(-2234567898765)
 		want.Checklist = append(want.Checklist, "point 1")
 
 		want.AddMember(&domain.Member{Name: "test1", TelegramID: 1, Order: 1})
@@ -188,8 +186,7 @@ func TestSaveWithMembers(t *testing.T) {
 	repo := PostgresHouseholdRepository{db: querier}
 
 	t.Run("success", func(t *testing.T) {
-		want := domain.NewHousehold(-1)
-		want.TelegramID = 1
+		want := domain.NewHousehold(-1234567898765)
 		want.Checklist = append(want.Checklist, "point 1")
 
 		want.AddMember(&domain.Member{Name: "test1", TelegramID: 1, Order: 1})
@@ -263,10 +260,7 @@ func TestGetSchedules(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		h1 := domain.NewHousehold(-1)
-		h1.TelegramID = 1
-
-		h2 := domain.NewHousehold(-1)
-		h2.TelegramID = 2
+		h2 := domain.NewHousehold(-2)
 
 		households := []*domain.Household{h1, h2}
 

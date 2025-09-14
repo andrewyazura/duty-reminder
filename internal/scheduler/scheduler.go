@@ -16,7 +16,7 @@ type NotificationScheduler struct {
 	eventBus      *eventbus.EventBus
 	logger        *slog.Logger
 	scheduler     gocron.Scheduler
-	householdJobs map[int]gocron.Job
+	householdJobs map[int64]gocron.Job
 }
 
 func New(
@@ -33,7 +33,7 @@ func New(
 		eventBus:      bus,
 		logger:        logger,
 		scheduler:     s,
-		householdJobs: make(map[int]gocron.Job),
+		householdJobs: make(map[int64]gocron.Job),
 	}
 
 	err = n.registerJobs(uow)

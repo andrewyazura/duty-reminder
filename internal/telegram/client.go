@@ -91,7 +91,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 	return result.Result, nil
 }
 
-func (c *Client) SendMessage(ctx context.Context, chatID int, text string, opts ...SendMessageOption) error {
+func (c *Client) SendMessage(ctx context.Context, chatID int64, text string, opts ...SendMessageOption) error {
 	payload := &sendMessagePayload{
 		ChatID: chatID,
 		Text:   text,

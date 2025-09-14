@@ -53,7 +53,7 @@ func TestSendMessage(t *testing.T) {
 
 	t.Run("success, simple sendMessage", func(t *testing.T) {
 		want := sendMessagePayload{
-			ChatID: 12345,
+			ChatID: -1234567898765,
 			Text:   "test message",
 		}
 
@@ -143,7 +143,7 @@ func TestGetMe(t *testing.T) {
 			io.WriteString(w, `{
 				"ok": true,
 				"result": {
-					"id": 1234,
+					"id": -1234567898765,
 					"username": "test_bot",
 					"first_name": "test_first_name",
 					"last_name": "test_last_name"
@@ -152,7 +152,7 @@ func TestGetMe(t *testing.T) {
 		}
 
 		wantUser := User{
-			ID:        1234,
+			ID:        -1234567898765,
 			Username:  "test_bot",
 			FirstName: "test_first_name",
 			LastName:  "test_last_name",
