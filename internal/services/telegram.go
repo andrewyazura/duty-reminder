@@ -172,11 +172,17 @@ func (s *TelegramService) register(
 		}
 
 		household.AddMember(member)
-
 		repo.SaveWithMembers(ctx, household)
 
 		return nil
 	})
+
+	s.client.SendMessage(
+		ctx,
+		message.Chat.ID,
+		"successfully registered",
+		telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
+	)
 
 	if err != nil {
 		s.logger.Error("something went wrong", "error", err)
