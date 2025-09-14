@@ -3,12 +3,14 @@ package config
 
 import (
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
 )
 
 type Config struct {
+	LogLevel slog.Level
 	Server   ServerConfig
 	Database DatabaseConfig
 	Telegram TelegramConfig
@@ -33,6 +35,7 @@ type TelegramConfig struct {
 
 func NewConfig() (*Config, error) {
 	config := &Config{
+		LogLevel: slog.LevelInfo,
 		Server: ServerConfig{
 			Port:                "8080",
 			TelegramRouteSecret: "secret",
@@ -47,16 +50,34 @@ func NewConfig() (*Config, error) {
 		},
 	}
 
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		config.Database.URL = v
+	}
+
+	if v := os.Getenv("LOG_LEVEL"); v != "" {
+		var level slog.Level
+		switch v {
+		case "debug":
+			level = slog.LevelDebug
+		case "info":
+			level = slog.LevelInfo
+		case "warn":
+			level = slog.LevelWarn
+		case "error":
+			level = slog.LevelError
+		default:
+			level = slog.LevelInfo
+		}
+
+		config.LogLevel = level
+	}
+
 	if v := os.Getenv("SERVER_PORT"); v != "" {
 		config.Server.Port = v
 	}
 
 	if v := os.Getenv("SERVER_TELEGRAM_ROUTE_SECRET"); v != "" {
 		config.Server.TelegramRouteSecret = v
-	}
-
-	if v := os.Getenv("DATABASE_URL"); v != "" {
-		config.Database.URL = v
 	}
 
 	if v := os.Getenv("TELEGRAM_API_TOKEN"); v != "" {

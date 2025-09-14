@@ -16,13 +16,15 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
-
 	config, err := config.NewConfig()
 	if err != nil {
-		logger.Error("couldn't build config", "error", err)
+		slog.Error("couldn't build config", "error", err)
 	}
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: config.LogLevel,
+	}))
+	slog.SetDefault(logger)
 
 	pool, err := pgxpool.New(context.Background(), config.Database.URL)
 	if err != nil {
