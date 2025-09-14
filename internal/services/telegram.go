@@ -92,7 +92,11 @@ func (s *TelegramService) handleNewGroup(
 
 		household = domain.NewHousehold(message.Chat.ID)
 
-		repo.Create(ctx, household)
+		err = repo.Create(ctx, household)
+		if err != nil {
+			return err
+		}
+
 		s.bus.Publish(ctx, "HouseholdCreated", household)
 
 		return nil
@@ -200,7 +204,6 @@ func (s *TelegramService) setSchedule(
 		h.Crontab = newCrontab
 
 		err = repo.Save(ctx, h)
-
 		if err != nil {
 			return err
 		}
