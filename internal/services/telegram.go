@@ -60,7 +60,6 @@ func (s *TelegramService) HandleUpdate(
 	// someone was added to a group
 	if newMembers := message.NewChatMembers; newMembers != nil {
 		for _, m := range newMembers {
-
 			// new member is the bot itself
 			if m.ID == s.config.BotID {
 				s.handleNewGroup(ctx, message)
@@ -159,7 +158,7 @@ func (s *TelegramService) register(
 				s.client.SendMessage(
 					ctx,
 					message.Chat.ID,
-					"already registered",
+					"You are already registered in this household",
 					telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 				)
 
@@ -180,12 +179,13 @@ func (s *TelegramService) register(
 
 	if err != nil {
 		s.logger.Error("something went wrong", "error", err)
+		return
 	}
 
 	s.client.SendMessage(
 		ctx,
 		message.Chat.ID,
-		"successfully registered",
+		"You're in the household now",
 		telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 	)
 }
@@ -202,6 +202,8 @@ func (s *TelegramService) setSchedule(
 	}
 
 	newCrontab := parts[1]
+	s.logger.Debug("new crontab provided", "crontab", newCrontab)
+
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, err := cronParser.Parse(newCrontab); err != nil {
 		s.client.SendMessage(ctx, message.Chat.ID, "invalid crontab string, example: 0 9 * * 5")
@@ -226,9 +228,10 @@ func (s *TelegramService) setSchedule(
 
 	if err != nil {
 		s.logger.Error("something went wrong", "error", err)
+		return
 	}
 
-	s.client.SendMessage(ctx, message.Chat.ID, "new crontab string saved")
+	s.client.SendMessage(ctx, message.Chat.ID, "Your crontab string has been updated successfully")
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
