@@ -59,7 +59,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	c.logger.Debug("sending telegram api request", "url", url, "body", reqBody)
+	c.logger.Debug("sending telegram api request", "endpoint", endpoint, "body", reqBody)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

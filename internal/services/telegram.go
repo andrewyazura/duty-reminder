@@ -50,6 +50,11 @@ func (s *TelegramService) HandleUpdate(
 
 	message := update.Message
 
+	if message.Chat.Type != "group" {
+		s.client.SendMessage(ctx, message.Chat.ID, "Sorry, I only work in groups")
+		return
+	}
+
 	// someone was added to a group
 	if newMembers := message.NewChatMembers; newMembers != nil {
 		for _, m := range newMembers {
@@ -57,19 +62,16 @@ func (s *TelegramService) HandleUpdate(
 			// new member is the bot itself
 			if m.ID == s.config.BotID {
 				s.handleNewGroup(ctx, message)
+				return
 			}
 		}
-	}
-
-	if message.Chat.Type != "group" {
-		s.client.SendMessage(ctx, message.Chat.ID, "Sorry, I only work in groups")
-		return
 	}
 
 	if message.Entities != nil {
 		for _, e := range message.Entities {
 			if e.Type == "bot_command" {
 				s.handleCommand(ctx, message, &e)
+				return
 			}
 		}
 	}

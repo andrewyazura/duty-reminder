@@ -24,7 +24,7 @@ type User struct {
 
 type Chat struct {
 	ID   int    `json:"id"`
-	Type string `json:"string"`
+	Type string `json:"type"`
 }
 
 type MessageEntity struct {
