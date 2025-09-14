@@ -4,6 +4,7 @@ package eventbus
 import (
 	"context"
 	"log/slog"
+	"runtime/debug"
 	"sync"
 )
 
@@ -42,8 +43,12 @@ func (eb *EventBus) Publish(ctx context.Context, eventType EventType, event Even
 	for _, handler := range handlersToCall {
 		go func(h Handler) {
 			defer func() {
-				if r := recover(); r != nil {
-					slog.Error("recovered error: %v", r)
+				if err := recover(); err != nil {
+					slog.Error(
+						"panic recovered",
+						"error", err,
+						"stack", string(debug.Stack()),
+					)
 				}
 			}()
 

@@ -27,7 +27,7 @@ func NewTelegramWebhookHandler(
 	}
 }
 
-func (h TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

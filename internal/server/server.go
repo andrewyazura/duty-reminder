@@ -18,10 +18,6 @@ type Server struct {
 	telegramHandler *TelegramWebhookHandler
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
-}
-
 func NewServer(
 	config config.ServerConfig,
 	telegramConfig config.TelegramConfig,
@@ -44,6 +40,10 @@ func NewServer(
 	s.registerRoutes()
 
 	return s
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
 }
 
 func (s *Server) registerRoutes() {
