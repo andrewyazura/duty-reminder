@@ -53,7 +53,7 @@ func (s *TelegramService) HandleUpdate(
 	message := update.Message
 
 	if t := message.Chat.Type; t != "group" && t != "supergroup" {
-		s.client.SendMessage(ctx, message.Chat.ID, "Sorry, I only work in groups")
+		s.client.SendMessage(ctx, message.Chat.ID, "🛑 Sorry, I only work in groups")
 		return
 	}
 
@@ -109,10 +109,8 @@ func (s *TelegramService) handleNewGroup(
 	}
 
 	s.client.SendMessage(ctx, message.Chat.ID, fmt.Sprintf(`
-		Hey! Group chat was successfully added.
-
-		Your current schedule is %s
-
+		Hey! Group chat was successfully added. 🏠
+		Your current schedule is %s 🗓️
 		To register as a member, please use /register
 	`, household.Crontab))
 
@@ -158,7 +156,7 @@ func (s *TelegramService) register(
 				s.client.SendMessage(
 					ctx,
 					message.Chat.ID,
-					"You are already registered in this household",
+					"👌 You are already a member of this household",
 					telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 				)
 
@@ -185,7 +183,7 @@ func (s *TelegramService) register(
 	s.client.SendMessage(
 		ctx,
 		message.Chat.ID,
-		"You're in the household now",
+		"✅ You're in the household now",
 		telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
 	)
 }
@@ -197,16 +195,30 @@ func (s *TelegramService) setSchedule(
 	parts := strings.Split(message.Text, " ")
 
 	if len(parts) == 1 {
-		s.client.SendMessage(ctx, message.Chat.ID, "You didn't provide any arguments. Correct usage: /setSchedule 0 9 * * 5")
+		s.client.SendMessage(
+			ctx,
+			message.Chat.ID,
+			`⚠️ You didn't provide any arguments.
+			Correct usage: /setSchedule 0 9 * * 5`,
+		)
 		return
 	}
 
 	newCrontab := strings.Join(parts[1:], " ")
-	s.logger.Debug("new crontab provided", "crontab", newCrontab)
+	s.logger.Debug(
+		"new crontab provided",
+		"chat_id", message.Chat.ID,
+		"crontab", newCrontab,
+	)
 
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, err := cronParser.Parse(newCrontab); err != nil {
-		s.client.SendMessage(ctx, message.Chat.ID, "The crontab string you've provided is invalid. Correct example: 0 9 * * 5")
+		s.client.SendMessage(
+			ctx,
+			message.Chat.ID,
+			`⚠️ The crontab string you've provided is invalid.
+			Correct example: 0 9 * * 5`,
+		)
 		return
 	}
 
@@ -231,7 +243,11 @@ func (s *TelegramService) setSchedule(
 		return
 	}
 
-	s.client.SendMessage(ctx, message.Chat.ID, "Your crontab string has been updated successfully")
+	s.client.SendMessage(
+		ctx,
+		message.Chat.ID,
+		"✅ Your household's crontab string has been updated successfully",
+	)
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
