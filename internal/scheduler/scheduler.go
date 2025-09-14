@@ -91,9 +91,9 @@ func (n NotificationScheduler) registerJobs(uow services.UnitOfWork) error {
 }
 
 func (n NotificationScheduler) createHouseholdJob(ctx context.Context, event eventbus.Event) {
-	h := event.(domain.Household)
+	h := event.(*domain.Household)
 
-	job, err := n.createJob(&h)
+	job, err := n.createJob(h)
 	if err != nil {
 		n.logger.Error(
 			"failed to register a new household job",
@@ -106,7 +106,7 @@ func (n NotificationScheduler) createHouseholdJob(ctx context.Context, event eve
 }
 
 func (n NotificationScheduler) updateHouseholdJob(ctx context.Context, event eventbus.Event) {
-	h := event.(domain.Household)
+	h := event.(*domain.Household)
 
 	job, ok := n.householdJobs[h.TelegramID]
 	if !ok {
@@ -122,7 +122,7 @@ func (n NotificationScheduler) updateHouseholdJob(ctx context.Context, event eve
 		)
 	}
 
-	newJob, err := n.createJob(&h)
+	newJob, err := n.createJob(h)
 	if err != nil {
 		n.logger.Error(
 			"failed to register a new household job",
@@ -147,7 +147,7 @@ func (n NotificationScheduler) createJob(h *domain.Household) (gocron.Job, error
 }
 
 func (n NotificationScheduler) deleteHouseholdJob(ctx context.Context, event eventbus.Event) {
-	h := event.(domain.Household)
+	h := event.(*domain.Household)
 
 	job, ok := n.householdJobs[h.TelegramID]
 	if !ok {
