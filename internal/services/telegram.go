@@ -46,6 +46,8 @@ func (s *TelegramService) HandleUpdate(
 	event eventbus.Event,
 ) {
 	update := event.(telegram.Update)
+	s.logger.Debug("update received", "update", update)
+
 	message := update.Message
 
 	if message.Chat.Type != "group" {

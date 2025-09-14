@@ -2,6 +2,7 @@
 package server
 
 import (
+	"bytes"
 	"io"
 	"log/slog"
 	"net/http"
@@ -43,6 +44,20 @@ func NewServer(
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var bodyBuf []byte
+	if r.Body != nil {
+		bodyBuf, _ = io.ReadAll(r.Body)
+		// Reset the body so the handler can still read it
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBuf))
+	}
+
+	s.logger.Debug("incoming request",
+		"method", r.Method,
+		"path", r.URL.Path,
+		"remote", r.RemoteAddr,
+		"body", string(bodyBuf),
+	)
+
 	s.router.ServeHTTP(w, r)
 }
 
