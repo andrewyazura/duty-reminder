@@ -59,6 +59,7 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 				m.Name,
 				m.TelegramID,
 			),
+			telegram.WithParseMode("markdown"),
 		)
 
 		err = repo.SaveWithMembers(ctx, household)

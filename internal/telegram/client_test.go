@@ -128,6 +128,36 @@ func TestSendMessage(t *testing.T) {
 			t.Errorf("SendMessage() returned an error: %v", err)
 		}
 	})
+
+	t.Run("success, sendMessage with parse mode", func(t *testing.T) {
+		want := "markdown"
+
+		handler.handler = func(w http.ResponseWriter, r *http.Request) {
+			var gotPayload sendMessagePayload
+			if err := json.NewDecoder(r.Body).Decode(&gotPayload); err != nil {
+				t.Fatalf("failed to unmarshal request body: %v", err)
+			}
+
+			got := gotPayload.ParseMode
+			if got == nil {
+				t.Fatalf("expected reply_parameters to be present")
+			}
+
+			if *got != want {
+				t.Errorf("got parse mode %s, want %s", *got, want)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{"ok": true, "result": {}}`)
+		}
+
+		err := client.SendMessage(ctx, 1, "t", WithParseMode(want))
+
+		if err != nil {
+			t.Errorf("SendMessage() returned an error: %v", err)
+		}
+	})
 }
 
 func TestGetMe(t *testing.T) {

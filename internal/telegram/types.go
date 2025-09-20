@@ -49,6 +49,7 @@ type sendMessagePayload struct {
 	ChatID          int64            `json:"chat_id"`
 	Text            string           `json:"text"`
 	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
+	ParseMode       *string          `json:"parse_mode,omitempty"`
 }
 
 type replyParameters struct {
@@ -61,5 +62,11 @@ type SendMessageOption func(*sendMessagePayload)
 func WithReplyParameters(messageID int64, chatID int64) SendMessageOption {
 	return func(p *sendMessagePayload) {
 		p.ReplyParameters = &replyParameters{MessageID: messageID, ChatID: chatID}
+	}
+}
+
+func WithParseMode(parseMode string) SendMessageOption {
+	return func(p *sendMessagePayload) {
+		p.ParseMode = &parseMode
 	}
 }
