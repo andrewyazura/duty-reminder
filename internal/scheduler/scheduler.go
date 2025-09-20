@@ -48,12 +48,12 @@ func New(
 	return n, nil
 }
 
-func (n NotificationScheduler) Start() {
+func (n *NotificationScheduler) Start() {
 	n.scheduler.Start()
 	n.logger.Info("scheduler started")
 }
 
-func (n NotificationScheduler) Shutdown() {
+func (n *NotificationScheduler) Shutdown() {
 	err := n.scheduler.Shutdown()
 
 	if err != nil {
@@ -64,7 +64,7 @@ func (n NotificationScheduler) Shutdown() {
 	n.logger.Info("scheduler shutdown")
 }
 
-func (n NotificationScheduler) registerJobs(uow services.UnitOfWork) error {
+func (n *NotificationScheduler) registerJobs(uow services.UnitOfWork) error {
 	var households []*domain.Household
 
 	err := uow.Execute(context.Background(), func(repo storage.HouseholdRepository) error {
@@ -94,7 +94,7 @@ func (n NotificationScheduler) registerJobs(uow services.UnitOfWork) error {
 	return nil
 }
 
-func (n NotificationScheduler) createHouseholdJob(ctx context.Context, event eventbus.Event) {
+func (n *NotificationScheduler) createHouseholdJob(ctx context.Context, event eventbus.Event) {
 	h := event.(*domain.Household)
 
 	job, err := n.createJob(h)
@@ -111,7 +111,7 @@ func (n NotificationScheduler) createHouseholdJob(ctx context.Context, event eve
 	n.householdJobs[h.TelegramID] = job
 }
 
-func (n NotificationScheduler) updateHouseholdJob(ctx context.Context, event eventbus.Event) {
+func (n *NotificationScheduler) updateHouseholdJob(ctx context.Context, event eventbus.Event) {
 	h := event.(*domain.Household)
 
 	job, ok := n.householdJobs[h.TelegramID]
@@ -142,7 +142,7 @@ func (n NotificationScheduler) updateHouseholdJob(ctx context.Context, event eve
 	n.householdJobs[h.TelegramID] = newJob
 }
 
-func (n NotificationScheduler) createJob(h *domain.Household) (gocron.Job, error) {
+func (n *NotificationScheduler) createJob(h *domain.Household) (gocron.Job, error) {
 	return n.scheduler.NewJob(
 		gocron.CronJob(h.Crontab, false),
 		gocron.NewTask(
@@ -154,7 +154,7 @@ func (n NotificationScheduler) createJob(h *domain.Household) (gocron.Job, error
 	)
 }
 
-func (n NotificationScheduler) deleteHouseholdJob(ctx context.Context, event eventbus.Event) {
+func (n *NotificationScheduler) deleteHouseholdJob(ctx context.Context, event eventbus.Event) {
 	h := event.(*domain.Household)
 
 	job, ok := n.householdJobs[h.TelegramID]
