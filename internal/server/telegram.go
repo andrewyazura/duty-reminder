@@ -33,11 +33,15 @@ func (h *TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if token := r.Header.Get("X-Telegram-Bot-Api-Secret-Token"); token != "" {
-		if token != h.headerSecret {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+	token := r.Header.Get("X-Telegram-Bot-Api-Secret-Token")
+
+	if token == "" {
+		w.WriteHeader(http.StatusForbidden)
+	}
+
+	if token != h.headerSecret {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
 	var update telegram.Update
