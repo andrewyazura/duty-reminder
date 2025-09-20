@@ -37,6 +37,7 @@ func (h *TelegramWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	if token == "" {
 		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	if token != h.headerSecret {
