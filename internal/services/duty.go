@@ -37,7 +37,7 @@ func NewDutyService(
 }
 
 func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) {
-	h := event.(domain.Household)
+	h := event.(*domain.Household)
 	var household *domain.Household
 
 	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {

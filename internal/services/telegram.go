@@ -216,21 +216,23 @@ func (s *TelegramService) setSchedule(
 		s.client.SendMessage(
 			ctx,
 			message.Chat.ID,
-			`⚠️ The crontab string you've provided is invalid.
+			`⚠️ The schedule you've provided is invalid.
 			Correct example: 0 9 * * 5`,
 		)
 		return
 	}
 
+	var household *domain.Household
 	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
-		h, err := repo.FindByID(ctx, message.Chat.ID)
+		var err error
+		household, err = repo.FindByID(ctx, message.Chat.ID)
 		if err != nil {
 			return err
 		}
 
-		h.Crontab = newCrontab
+		household.Crontab = newCrontab
 
-		err = repo.Save(ctx, h)
+		err = repo.Save(ctx, household)
 		if err != nil {
 			return err
 		}
@@ -246,8 +248,10 @@ func (s *TelegramService) setSchedule(
 	s.client.SendMessage(
 		ctx,
 		message.Chat.ID,
-		"✅ Your household's crontab string has been updated successfully",
+		"✅ Your household's schedule has been updated successfully",
 	)
+
+	s.bus.Publish(ctx, "HouseholdUpdated", household)
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
