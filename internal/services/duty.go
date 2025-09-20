@@ -38,11 +38,9 @@ func NewDutyService(
 
 func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) {
 	h := event.(*domain.Household)
-	var household *domain.Household
 
 	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
-		var err error
-		household, err = repo.FindByID(ctx, h.TelegramID)
+		household, err := repo.FindByID(ctx, h.TelegramID)
 
 		if err != nil {
 			return err
@@ -51,7 +49,7 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 		m := household.PopCurrentMember()
 		s.client.SendMessage(
 			ctx,
-			h.TelegramID,
+			household.TelegramID,
 			fmt.Sprintf(
 				"It's [%s](tg://user?id=%d)'s turn to clean this week",
 				m.Name,
@@ -59,7 +57,7 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			),
 		)
 
-		err = repo.SaveWithMembers(ctx, h)
+		err = repo.SaveWithMembers(ctx, household)
 
 		if err != nil {
 			return err
