@@ -25,6 +25,7 @@ func (uow PostgresUnitOfWork) Execute(ctx context.Context, fn func(storage.House
 	if err != nil {
 		return err
 	}
+	defer conn.Release()
 
 	repo := storage.NewPostgresHouseholdRepository(conn)
 
