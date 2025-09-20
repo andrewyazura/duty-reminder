@@ -38,6 +38,10 @@ func (m *mockUnitOfWork) Execute(ctx context.Context, fn func(repo storage.House
 	return fn(m.repo)
 }
 
+func (m *mockUnitOfWork) ExecuteTransaction(ctx context.Context, fn func(repo storage.HouseholdRepository) error) error {
+	return fn(m.repo)
+}
+
 func TestNew(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 

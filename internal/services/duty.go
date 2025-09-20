@@ -39,7 +39,7 @@ func NewDutyService(
 func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) {
 	h := event.(*domain.Household)
 
-	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+	err := s.uow.ExecuteTransaction(ctx, func(repo storage.HouseholdRepository) error {
 		household, err := repo.FindByID(ctx, h.TelegramID)
 
 		if err != nil {

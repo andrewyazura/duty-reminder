@@ -9,6 +9,7 @@ import (
 
 type UnitOfWork interface {
 	Execute(ctx context.Context, fn func(repo storage.HouseholdRepository) error) error
+	ExecuteTransaction(ctx context.Context, fn func(repo storage.HouseholdRepository) error) error
 }
 
 type PostgresUnitOfWork struct {
@@ -20,6 +21,21 @@ func NewPostgresUnitOfWork(pool *pgxpool.Pool) *PostgresUnitOfWork {
 }
 
 func (uow PostgresUnitOfWork) Execute(ctx context.Context, fn func(storage.HouseholdRepository) error) error {
+	conn, err := uow.pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+
+	repo := storage.NewPostgresHouseholdRepository(conn)
+
+	if err := fn(repo); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uow PostgresUnitOfWork) ExecuteTransaction(ctx context.Context, fn func(storage.HouseholdRepository) error) error {
 	transaction, err := uow.pool.Begin(ctx)
 	if err != nil {
 		return err

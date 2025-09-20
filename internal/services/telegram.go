@@ -84,7 +84,7 @@ func (s *TelegramService) handleNewGroup(
 ) {
 	var household *domain.Household
 
-	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+	err := s.uow.ExecuteTransaction(ctx, func(repo storage.HouseholdRepository) error {
 		_, err := repo.FindByID(ctx, message.Chat.ID)
 
 		if err == nil {
@@ -139,7 +139,7 @@ func (s *TelegramService) register(
 	ctx context.Context,
 	message *telegram.Message,
 ) {
-	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+	err := s.uow.ExecuteTransaction(ctx, func(repo storage.HouseholdRepository) error {
 		household, err := repo.FindByID(ctx, message.Chat.ID)
 
 		if err != nil {
@@ -220,7 +220,7 @@ func (s *TelegramService) setSchedule(
 	}
 
 	var household *domain.Household
-	err := s.uow.Execute(ctx, func(repo storage.HouseholdRepository) error {
+	err := s.uow.ExecuteTransaction(ctx, func(repo storage.HouseholdRepository) error {
 		var err error
 		household, err = repo.FindByID(ctx, message.Chat.ID)
 		if err != nil {
