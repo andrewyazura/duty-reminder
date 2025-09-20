@@ -48,14 +48,27 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			return err
 		}
 
+		m := household.PopCurrentMember()
+		s.client.SendMessage(
+			ctx,
+			h.TelegramID,
+			fmt.Sprintf(
+				"It's [%s](tg://user?id=%s)'s turn to clean this week",
+				m.Name,
+				m.TelegramID,
+			),
+		)
+
+		err = repo.SaveWithMembers(ctx, h)
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
 	if err != nil {
 		s.logger.Error("something went wrong", "error", err)
 	}
-
-	m := household.PopCurrentMember()
-
-	s.client.SendMessage(ctx, h.TelegramID, fmt.Sprintf("It's %s's turn to clean this week", m.Name))
 }
