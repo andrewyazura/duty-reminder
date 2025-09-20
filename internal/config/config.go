@@ -18,6 +18,7 @@ type Config struct {
 
 type ServerConfig struct {
 	Port                string
+	MaxLoggedBodySize   int
 	TelegramRouteSecret string
 }
 
@@ -38,6 +39,7 @@ func NewConfig() (*Config, error) {
 		LogLevel: slog.LevelInfo,
 		Server: ServerConfig{
 			Port:                "8080",
+			MaxLoggedBodySize:   4096,
 			TelegramRouteSecret: "secret",
 		},
 		Database: DatabaseConfig{},
@@ -48,10 +50,6 @@ func NewConfig() (*Config, error) {
 			HeaderSecret: "secret",
 			Timeout:      30 * time.Second,
 		},
-	}
-
-	if v := os.Getenv("DATABASE_URL"); v != "" {
-		config.Database.URL = v
 	}
 
 	if v := os.Getenv("LOG_LEVEL"); v != "" {
@@ -76,8 +74,21 @@ func NewConfig() (*Config, error) {
 		config.Server.Port = v
 	}
 
+	if v := os.Getenv("SERVER_MAX_LOGGED_BODY_SIZE"); v != "" {
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			log.Fatalf("invalid config param SERVER_MAX_LOGGED_BODY_SIZE: %v", err)
+		}
+
+		config.Server.MaxLoggedBodySize = i
+	}
+
 	if v := os.Getenv("SERVER_TELEGRAM_ROUTE_SECRET"); v != "" {
 		config.Server.TelegramRouteSecret = v
+	}
+
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		config.Database.URL = v
 	}
 
 	if v := os.Getenv("TELEGRAM_API_TOKEN"); v != "" {

@@ -44,17 +44,22 @@ func NewServer(
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var bodyBuf []byte
+	var bodyStr string
 	if r.Body != nil {
-		bodyBuf, _ = io.ReadAll(r.Body)
+		bodyBuf, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBuf))
+
+		bodyStr = string(bodyBuf)
+		if len(bodyBuf) > s.config.MaxLoggedBodySize {
+			bodyStr = bodyStr[:s.config.MaxLoggedBodySize] + "... [truncated]"
+		}
 	}
 
 	s.logger.Debug("incoming request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"remote", r.RemoteAddr,
-		"body", string(bodyBuf),
+		"body", bodyStr,
 	)
 
 	s.router.ServeHTTP(w, r)
