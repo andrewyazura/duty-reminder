@@ -19,6 +19,7 @@ func main() {
 	config, err := config.NewConfig()
 	if err != nil {
 		slog.Error("couldn't build config", "error", err)
+		os.Exit(1)
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -29,6 +30,7 @@ func main() {
 	pool, err := pgxpool.New(context.Background(), config.Database.URL)
 	if err != nil {
 		logger.Error("couldn't start a db connection pool", "error", err)
+		os.Exit(1)
 	}
 	defer pool.Close()
 
