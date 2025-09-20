@@ -50,6 +50,7 @@ func New(
 
 func (n NotificationScheduler) Start() {
 	n.scheduler.Start()
+	n.logger.Info("scheduler started")
 }
 
 func (n NotificationScheduler) Shutdown() {
@@ -57,7 +58,10 @@ func (n NotificationScheduler) Shutdown() {
 
 	if err != nil {
 		n.logger.Error("failed to shutdown the scheduler", "error", err)
+		return
 	}
+
+	n.logger.Info("scheduler shutdown")
 }
 
 func (n NotificationScheduler) registerJobs(uow services.UnitOfWork) error {
@@ -102,6 +106,8 @@ func (n NotificationScheduler) createHouseholdJob(ctx context.Context, event eve
 		)
 	}
 
+	n.logger.Info("created a job", "household", h.TelegramID)
+
 	n.householdJobs[h.TelegramID] = job
 }
 
@@ -130,6 +136,8 @@ func (n NotificationScheduler) updateHouseholdJob(ctx context.Context, event eve
 			"error", err,
 		)
 	}
+
+	n.logger.Info("updated a job", "household", h.TelegramID)
 
 	n.householdJobs[h.TelegramID] = newJob
 }
@@ -164,4 +172,5 @@ func (n NotificationScheduler) deleteHouseholdJob(ctx context.Context, event eve
 	}
 
 	delete(n.householdJobs, h.TelegramID)
+	n.logger.Info("deleted a job", "household", h.TelegramID)
 }
