@@ -44,7 +44,7 @@ func (eb *EventBus) Publish(ctx context.Context, eventType EventType, event Even
 		go func(h Handler) {
 			defer func() {
 				if err := recover(); err != nil {
-					slog.Error(
+					eb.logger.Error(
 						"panic recovered",
 						"error", err,
 						"stack", string(debug.Stack()),

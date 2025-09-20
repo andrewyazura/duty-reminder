@@ -41,7 +41,7 @@ func (c *Client) buildURL(endpoint string) string {
 func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.RawMessage, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		slog.Error("failed to marshal request json", "endpoint", endpoint, "error", err)
+		c.logger.Error("failed to marshal request json", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
@@ -54,7 +54,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 		reqBody,
 	)
 	if err != nil {
-		slog.Error("failed to create http request", "endpoint", endpoint, "error", err)
+		c.logger.Error("failed to create http request", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
@@ -69,7 +69,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		slog.Error("http request failed", "endpoint", endpoint, "error", err)
+		c.logger.Error("http request failed", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -78,19 +78,19 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("failed to read response body", "endpoint", endpoint, "error", err)
+		c.logger.Error("failed to read response body", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
 	var result Result
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		slog.Error("failed to decode response body", "endpoint", endpoint, "body", string(respBody), "error", err)
+		c.logger.Error("failed to decode response body", "endpoint", endpoint, "body", string(respBody), "error", err)
 		return nil, err
 	}
 
 	if !result.Ok {
 		err := fmt.Errorf("telegram api error: %s", result.Description)
-		slog.Error("telegram api returned an error", "endpoint", endpoint, "error", err)
+		c.logger.Error("telegram api returned an error", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
