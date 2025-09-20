@@ -53,7 +53,7 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			ctx,
 			h.TelegramID,
 			fmt.Sprintf(
-				"It's [%s](tg://user?id=%s)'s turn to clean this week",
+				"It's [%s](tg://user?id=%d)'s turn to clean this week",
 				m.Name,
 				m.TelegramID,
 			),
