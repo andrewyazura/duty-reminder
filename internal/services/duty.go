@@ -46,6 +46,10 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			return err
 		}
 
+		if len(household.Members) == 0 {
+			return nil
+		}
+
 		m := household.PopCurrentMember()
 		s.client.SendMessage(
 			ctx,

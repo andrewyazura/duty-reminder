@@ -98,8 +98,6 @@ func (s *TelegramService) handleNewGroup(
 			return err
 		}
 
-		s.bus.Publish(ctx, "HouseholdCreated", household)
-
 		return nil
 	})
 
@@ -108,13 +106,12 @@ func (s *TelegramService) handleNewGroup(
 		return
 	}
 
+	s.bus.Publish(ctx, "HouseholdCreated", household)
 	s.client.SendMessage(ctx, message.Chat.ID, fmt.Sprintf(`
 		Hey! Group chat was successfully added. 🏠
 		Your current schedule is %s 🗓️
 		To register as a member, please use /register
 	`, household.Crontab))
-
-	s.bus.Publish(ctx, "HouseholdCreated", household)
 }
 
 func (s *TelegramService) handleCommand(
