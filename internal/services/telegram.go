@@ -167,7 +167,11 @@ func (s *TelegramService) register(
 		}
 
 		household.AddMember(member)
-		repo.SaveWithMembers(ctx, household)
+		err = repo.SaveWithMembers(ctx, household)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
