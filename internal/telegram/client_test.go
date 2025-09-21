@@ -95,6 +95,36 @@ func TestSendMessage(t *testing.T) {
 		}
 	})
 
+	t.Run("success, sendMessage with parse mode", func(t *testing.T) {
+		want := "markdown"
+
+		handler.handler = func(w http.ResponseWriter, r *http.Request) {
+			var gotPayload sendMessagePayload
+			if err := json.NewDecoder(r.Body).Decode(&gotPayload); err != nil {
+				t.Fatalf("failed to unmarshal request body: %v", err)
+			}
+
+			got := gotPayload.ParseMode
+			if got == nil {
+				t.Fatalf("expected parse_mode to be present")
+			}
+
+			if *got != want {
+				t.Errorf("got parse mode %s, want %s", *got, want)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{"ok": true, "result": {}}`)
+		}
+
+		err := client.SendMessage(ctx, 1, "t", WithParseMode(want))
+
+		if err != nil {
+			t.Errorf("SendMessage() returned an error: %v", err)
+		}
+	})
+
 	t.Run("success, sendMessage with reply parameters", func(t *testing.T) {
 		want := replyParameters{123, 12345}
 
@@ -129,8 +159,21 @@ func TestSendMessage(t *testing.T) {
 		}
 	})
 
-	t.Run("success, sendMessage with parse mode", func(t *testing.T) {
-		want := "markdown"
+	t.Run("success, sendMessage with reply inline keyboard", func(t *testing.T) {
+		want := InlineKeyboard{
+			{
+				&InlineKeyboardButton{
+					Text: "test_text",
+					URL:  "test_url",
+				},
+			},
+			{
+				&InlineKeyboardButton{
+					Text:         "test_text",
+					CallbackData: "test_callback_data",
+				},
+			},
+		}
 
 		handler.handler = func(w http.ResponseWriter, r *http.Request) {
 			var gotPayload sendMessagePayload
@@ -138,13 +181,37 @@ func TestSendMessage(t *testing.T) {
 				t.Fatalf("failed to unmarshal request body: %v", err)
 			}
 
-			got := gotPayload.ParseMode
+			got := gotPayload.ReplyMarkup
 			if got == nil {
-				t.Fatalf("expected reply_parameters to be present")
+				t.Fatalf("expected reply_markup to be present")
 			}
 
-			if *got != want {
-				t.Errorf("got parse mode %s, want %s", *got, want)
+			var gotMarkup InlineKeyboardMarkup
+			if err := json.Unmarshal(got, &gotMarkup); err != nil {
+				t.Fatalf("failed to unmarshal ReplyMarkup: %v", err)
+			}
+
+			for i, row := range gotMarkup.Keyboard {
+				if row == nil {
+					t.Errorf("row is nil, expected %v", want[i])
+					continue
+				}
+
+				if len(row) != len(want[i]) {
+					t.Errorf("row %d has %d elements, want %d", i, len(row), len(want[i]))
+					continue
+				}
+
+				for j, button := range row {
+					if button == nil {
+						t.Errorf("button %d is nil, expected %v", j, want[i][j])
+						continue
+					}
+
+					if *button != *want[i][j] {
+						t.Errorf("got button %v, want %v", button, want[i][j])
+					}
+				}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -152,7 +219,7 @@ func TestSendMessage(t *testing.T) {
 			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
-		err := client.SendMessage(ctx, 1, "t", WithParseMode(want))
+		err := client.SendMessage(ctx, 1, "t", WithInlineKeyboardMarkup(want))
 
 		if err != nil {
 			t.Errorf("SendMessage() returned an error: %v", err)

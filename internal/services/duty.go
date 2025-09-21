@@ -55,12 +55,31 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			ctx,
 			household.TelegramID,
 			fmt.Sprintf(
-				"It's [%s](tg://user?id=%d)'s turn to clean",
+				"🧹 It's [%s](tg://user?id=%d)'s turn to clean",
 				m.Name,
 				m.TelegramID,
 			),
 			telegram.WithParseMode("markdown"),
 		)
+
+		if checklist := household.Checklist; checklist != nil {
+			keyboard := telegram.InlineKeyboard{}
+
+			for _, item := range checklist {
+				keyboard = append(keyboard,
+					[]*telegram.InlineKeyboardButton{
+						{Text: item, CallbackData: fmt.Sprintf("household:%d;checklist:%s", household.TelegramID, item)},
+					},
+				)
+			}
+
+			s.client.SendMessage(
+				ctx,
+				household.TelegramID,
+				"List of stuff to complete:",
+				telegram.WithInlineKeyboardMarkup(keyboard),
+			)
+		}
 
 		err = repo.SaveWithMembers(ctx, household)
 

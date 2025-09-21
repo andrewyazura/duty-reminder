@@ -1,7 +1,10 @@
 // Package telegram
 package telegram
 
-import "strings"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type Update struct {
 	UpdateID int      `json:"update_id"`
@@ -46,10 +49,12 @@ func (e MessageEntity) Text(m *Message) string {
 }
 
 type sendMessagePayload struct {
-	ChatID          int64            `json:"chat_id"`
-	Text            string           `json:"text"`
-	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+
 	ParseMode       *string          `json:"parse_mode,omitempty"`
+	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
+	ReplyMarkup     json.RawMessage  `json:"reply_markup,omitempty"`
 }
 
 type replyParameters struct {
@@ -57,7 +62,25 @@ type replyParameters struct {
 	ChatID    int64 `json:"chat_id"`
 }
 
+type InlineKeyboardMarkup struct {
+	Keyboard InlineKeyboard `json:"inline_keyboard"`
+}
+
+type InlineKeyboard [][]*InlineKeyboardButton
+
+type InlineKeyboardButton struct {
+	Text         string `json:"text"`
+	URL          string `json:"url"`
+	CallbackData string `json:"callback_data"`
+}
+
 type SendMessageOption func(*sendMessagePayload)
+
+func WithParseMode(parseMode string) SendMessageOption {
+	return func(p *sendMessagePayload) {
+		p.ParseMode = &parseMode
+	}
+}
 
 func WithReplyParameters(messageID int64, chatID int64) SendMessageOption {
 	return func(p *sendMessagePayload) {
@@ -65,8 +88,10 @@ func WithReplyParameters(messageID int64, chatID int64) SendMessageOption {
 	}
 }
 
-func WithParseMode(parseMode string) SendMessageOption {
+func WithInlineKeyboardMarkup(markup InlineKeyboard) SendMessageOption {
 	return func(p *sendMessagePayload) {
-		p.ParseMode = &parseMode
+		p.ReplyMarkup, _ = json.Marshal(InlineKeyboardMarkup{
+			Keyboard: markup,
+		})
 	}
 }
