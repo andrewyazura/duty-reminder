@@ -108,7 +108,7 @@ func (s *TelegramService) handleCallbackQuery(
 	}
 
 	if strings.HasPrefix(data, "completed_item") {
-		s.client.AnswerCallbackQuery(callbackQuery.ID).WithText("already done").Execute(ctx)
+		s.client.AnswerCallbackQuery(callbackQuery.ID).WithText("✅ this item is already done").Execute(ctx)
 	}
 }
 
@@ -283,7 +283,14 @@ func (s *TelegramService) setSchedule(
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
-	s.client.SendMessage(message.Chat.ID, "/register to register in the household").Execute(ctx)
+	s.client.SendMessage(
+		message.Chat.ID,
+		`
+		/register - become a member of the household
+		/setSchedule * * * * * - change household's schedule
+		/skip - skip the current member on duty
+		`,
+	).Execute(ctx)
 }
 
 func (s *TelegramService) skip(ctx context.Context, message *telegram.Message) {
