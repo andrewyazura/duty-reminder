@@ -160,6 +160,8 @@ func (s *TelegramService) handleCommand(
 		s.register(ctx, message)
 	case "setSchedule":
 		s.setSchedule(ctx, message)
+	case "setChecklist":
+		s.setChecklist(ctx, message)
 	case "help":
 		s.help(ctx, message)
 	case "skip":
@@ -228,8 +230,8 @@ func (s *TelegramService) setSchedule(
 	if len(parts) == 1 {
 		s.client.SendMessage(
 			message.Chat.ID,
-			`⚠️ You didn't provide any arguments.
-			Correct usage: /setSchedule 0 9 * * 5`,
+			`⚠️ You didn't provide any arguments. Correct usage:
+			/setSchedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -245,8 +247,8 @@ func (s *TelegramService) setSchedule(
 	if _, err := cronParser.Parse(newCrontab); err != nil {
 		s.client.SendMessage(
 			message.Chat.ID,
-			`⚠️ The schedule you've provided is invalid.
-			Correct example: 0 9 * * 5`,
+			`⚠️ The schedule you've provided is invalid. Correct example:
+			/setSchedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -276,10 +278,56 @@ func (s *TelegramService) setSchedule(
 
 	s.client.SendMessage(
 		message.Chat.ID,
-		"✅ Your household's schedule has been updated successfully",
+		"✅ Your household's schedule has been updated",
 	).Execute(ctx)
 
-	s.bus.Publish(ctx, "HouseholdUpdated", household)
+	s.bus.Publish(ctx, "HouseholdCrontabUpdated", household)
+}
+
+func (s *TelegramService) setChecklist(
+	ctx context.Context,
+	message *telegram.Message,
+) {
+	parts := strings.Split(message.Text, "\n")
+
+	if len(parts) == 1 {
+		s.client.SendMessage(
+			message.Chat.ID,
+			`⚠️ You didn't provide any arguments. Correct usage:
+			/setChecklist
+			- item one
+			- item two`,
+		).Execute(ctx)
+		return
+	}
+
+	checklist := parts[1:]
+
+	err := s.uow.ExecuteTransaction(ctx, func(repo storage.HouseholdRepository) error {
+		household, err := repo.FindByID(ctx, message.Chat.ID)
+		if err != nil {
+			return err
+		}
+
+		household.Checklist = checklist
+
+		err = repo.Save(ctx, household)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		s.logger.Error("something went wrong", "error", err)
+		return
+	}
+
+	s.client.SendMessage(
+		message.Chat.ID,
+		"✅ Your household's checklist has been updated",
+	).Execute(ctx)
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
@@ -287,7 +335,8 @@ func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
 		message.Chat.ID,
 		`
 		/register - become a member of the household
-		/setSchedule * * * * * - change household's schedule
+		/setSchedule - change household's schedule
+		/setChecklist - change household's checklist
 		/skip - skip the current member on duty
 		`,
 	).Execute(ctx)

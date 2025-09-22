@@ -57,8 +57,8 @@ type CallbackQuery struct {
 }
 
 type replyMarkup struct {
-	InlineKeyboard InlineKeyboard `json:"inline_keyboard"`
-	ReplyKeyboard  ReplyKeyboard  `json:"reply_keyboard"`
+	InlineKeyboard InlineKeyboard `json:"inline_keyboard,omitempty"`
+	ReplyKeyboard  ReplyKeyboard  `json:"reply_keyboard,omitempty"`
 }
 
 type InlineKeyboard [][]*InlineKeyboardButton

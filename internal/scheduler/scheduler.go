@@ -42,7 +42,7 @@ func New(
 	}
 
 	bus.Subscribe("HouseholdCreated", n.createHouseholdJob)
-	bus.Subscribe("HouseholdUpdated", n.updateHouseholdJob)
+	bus.Subscribe("HouseholdCrontabUpdated", n.updateHouseholdJob)
 	bus.Subscribe("HouseholdDeleted", n.deleteHouseholdJob)
 
 	return n, nil
