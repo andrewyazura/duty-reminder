@@ -96,7 +96,7 @@ func (s *TelegramService) handleCallbackQuery(
 		for _, row := range keyboard {
 			if row[0].CallbackData == data {
 				row[0].Text = fmt.Sprintf("✅ %s", row[0].Text)
-				row[0].CallbackData = ""
+				row[0].CallbackData = "do_nothing"
 				break
 			}
 		}
