@@ -141,11 +141,12 @@ func (s *TelegramService) handleNewGroup(
 	}
 
 	s.bus.Publish(ctx, "HouseholdCreated", household)
-	s.client.SendMessage(message.Chat.ID, fmt.Sprintf(`
-		Hey! Group chat was successfully added. 🏠
-		Your current schedule is %s 🗓️
-		To register as a member, please use /register
-	`, household.Crontab)).Execute(ctx)
+	s.client.SendMessage(message.Chat.ID, fmt.Sprintf(
+		`Hey! Group chat was successfully added. 🏠
+Your current schedule is %s 🗓️
+To register as a member, please use /register`,
+		household.Crontab,
+	)).Execute(ctx)
 }
 
 func (s *TelegramService) handleCommand(
@@ -231,7 +232,8 @@ func (s *TelegramService) setSchedule(
 		s.client.SendMessage(
 			message.Chat.ID,
 			`⚠️ You didn't provide any arguments. Correct usage:
-			/setSchedule 0 9 * * 5`,
+
+/setSchedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -248,7 +250,8 @@ func (s *TelegramService) setSchedule(
 		s.client.SendMessage(
 			message.Chat.ID,
 			`⚠️ The schedule you've provided is invalid. Correct example:
-			/setSchedule 0 9 * * 5`,
+
+/setSchedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -294,9 +297,10 @@ func (s *TelegramService) setChecklist(
 		s.client.SendMessage(
 			message.Chat.ID,
 			`⚠️ You didn't provide any arguments. Correct usage:
-			/setChecklist
-			- item one
-			- item two`,
+
+/setChecklist
+item one
+item two`,
 		).Execute(ctx)
 		return
 	}
@@ -333,11 +337,10 @@ func (s *TelegramService) setChecklist(
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
 	s.client.SendMessage(
 		message.Chat.ID,
-		`
-		/register - become a member of the household
-		/setSchedule - change household's schedule
-		/setChecklist - change household's checklist
-		/skip - skip the current member on duty
+		`/register - become a member of the household
+/setSchedule - change household's schedule
+/setChecklist - change household's checklist
+/skip - skip the current member on duty
 		`,
 	).Execute(ctx)
 }
