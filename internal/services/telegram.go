@@ -159,9 +159,9 @@ func (s *TelegramService) handleCommand(
 	switch command {
 	case "register":
 		s.register(ctx, message)
-	case "setSchedule":
+	case "set_schedule":
 		s.setSchedule(ctx, message)
-	case "setChecklist":
+	case "set_checklist":
 		s.setChecklist(ctx, message)
 	case "help":
 		s.help(ctx, message)
@@ -233,7 +233,7 @@ func (s *TelegramService) setSchedule(
 			message.Chat.ID,
 			`⚠️ You didn't provide any arguments. Correct usage:
 
-/setSchedule 0 9 * * 5`,
+/set_schedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -251,7 +251,7 @@ func (s *TelegramService) setSchedule(
 			message.Chat.ID,
 			`⚠️ The schedule you've provided is invalid. Correct example:
 
-/setSchedule 0 9 * * 5`,
+/set_schedule 0 9 * * 5`,
 		).Execute(ctx)
 		return
 	}
@@ -298,7 +298,7 @@ func (s *TelegramService) setChecklist(
 			message.Chat.ID,
 			`⚠️ You didn't provide any arguments. Correct usage:
 
-/setChecklist
+/set_checklist
 item one
 item two`,
 		).Execute(ctx)
@@ -338,8 +338,8 @@ func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
 	s.client.SendMessage(
 		message.Chat.ID,
 		`/register - become a member of the household
-/setSchedule - change household's schedule
-/setChecklist - change household's checklist
+/set_schedule - change household's schedule
+/set_checklist - change household's checklist
 /skip - skip the current member on duty
 		`,
 	).Execute(ctx)
