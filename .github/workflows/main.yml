@@ -14,3 +14,4 @@ jobs:
     - uses: cachix/install-nix-action@v31
     - run: nix build
     - run: nix flake check
+    - run: go test ./...
