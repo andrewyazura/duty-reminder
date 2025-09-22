@@ -52,15 +52,13 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 
 		m := household.PopCurrentMember()
 		s.client.SendMessage(
-			ctx,
 			household.TelegramID,
 			fmt.Sprintf(
 				"🧹 It's [%s](tg://user?id=%d)'s turn to clean",
 				m.Name,
 				m.TelegramID,
 			),
-			telegram.WithParseMode("markdown"),
-		)
+		).Execute(ctx)
 
 		if checklist := household.Checklist; checklist != nil {
 			keyboard := telegram.InlineKeyboard{}
@@ -68,17 +66,21 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 			for _, item := range checklist {
 				keyboard = append(keyboard,
 					[]*telegram.InlineKeyboardButton{
-						{Text: item, CallbackData: fmt.Sprintf("household:%d;checklist:%s", household.TelegramID, item)},
+						{
+							Text: item,
+							CallbackData: fmt.Sprintf(
+								"update_checklist:%s",
+								item,
+							),
+						},
 					},
 				)
 			}
 
 			s.client.SendMessage(
-				ctx,
 				household.TelegramID,
 				"List of stuff to complete:",
-				telegram.WithInlineKeyboardMarkup(keyboard),
-			)
+			).WithInlineKeyboardMarkup(keyboard).Execute(ctx)
 		}
 
 		err = repo.SaveWithMembers(ctx, household)

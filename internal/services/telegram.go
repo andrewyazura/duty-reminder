@@ -50,10 +50,15 @@ func (s *TelegramService) HandleUpdate(
 	update := event.(telegram.Update)
 	s.logger.Debug("update received", "update", update)
 
+	if callbackQuery := update.CallbackQuery; callbackQuery != nil {
+		s.handleCallbackQuery(ctx, callbackQuery)
+		return
+	}
+
 	message := update.Message
 
 	if t := message.Chat.Type; t != "group" && t != "supergroup" {
-		s.client.SendMessage(ctx, message.Chat.ID, "🛑 Sorry, I only work in groups")
+		s.client.SendMessage(message.Chat.ID, "🛑 Sorry, I only work in groups").Execute(ctx)
 		return
 	}
 
@@ -75,6 +80,31 @@ func (s *TelegramService) HandleUpdate(
 				return
 			}
 		}
+	}
+}
+
+func (s *TelegramService) handleCallbackQuery(
+	ctx context.Context,
+	callbackQuery *telegram.CallbackQuery,
+) {
+	data := callbackQuery.Data
+
+	if strings.HasPrefix(data, "update_checklist") {
+		message := callbackQuery.Message
+		keyboard := message.ReplyMarkup.InlineKeyboard
+
+		for _, row := range keyboard {
+			if row[0].CallbackData == data {
+				row[0].Text = fmt.Sprintf("✅ %s", row[0].Text)
+				row[0].CallbackData = ""
+				break
+			}
+		}
+
+		s.client.EditMessageReplyMarkup(
+			message.Chat.ID,
+			message.MessageID,
+		).WithInlineKeyboardMarkup(keyboard).Execute(ctx)
 	}
 }
 
@@ -107,11 +137,11 @@ func (s *TelegramService) handleNewGroup(
 	}
 
 	s.bus.Publish(ctx, "HouseholdCreated", household)
-	s.client.SendMessage(ctx, message.Chat.ID, fmt.Sprintf(`
+	s.client.SendMessage(message.Chat.ID, fmt.Sprintf(`
 		Hey! Group chat was successfully added. 🏠
 		Your current schedule is %s 🗓️
 		To register as a member, please use /register
-	`, household.Crontab))
+	`, household.Crontab)).Execute(ctx)
 }
 
 func (s *TelegramService) handleCommand(
@@ -151,11 +181,9 @@ func (s *TelegramService) register(
 		for _, m := range household.Members {
 			if m.TelegramID == user.ID {
 				s.client.SendMessage(
-					ctx,
 					message.Chat.ID,
 					"👌 You are already a member of this household",
-					telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
-				)
+				).WithReplyParameters(message.MessageID, message.Chat.ID).Execute(ctx)
 
 				return errors.New("member already exists")
 			}
@@ -182,11 +210,9 @@ func (s *TelegramService) register(
 	}
 
 	s.client.SendMessage(
-		ctx,
 		message.Chat.ID,
 		"✅ You're in the household now",
-		telegram.WithReplyParameters(message.MessageID, message.Chat.ID),
-	)
+	).WithReplyParameters(message.MessageID, message.Chat.ID).Execute(ctx)
 }
 
 func (s *TelegramService) setSchedule(
@@ -197,11 +223,10 @@ func (s *TelegramService) setSchedule(
 
 	if len(parts) == 1 {
 		s.client.SendMessage(
-			ctx,
 			message.Chat.ID,
 			`⚠️ You didn't provide any arguments.
 			Correct usage: /setSchedule 0 9 * * 5`,
-		)
+		).Execute(ctx)
 		return
 	}
 
@@ -215,11 +240,10 @@ func (s *TelegramService) setSchedule(
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, err := cronParser.Parse(newCrontab); err != nil {
 		s.client.SendMessage(
-			ctx,
 			message.Chat.ID,
 			`⚠️ The schedule you've provided is invalid.
 			Correct example: 0 9 * * 5`,
-		)
+		).Execute(ctx)
 		return
 	}
 
@@ -247,22 +271,21 @@ func (s *TelegramService) setSchedule(
 	}
 
 	s.client.SendMessage(
-		ctx,
 		message.Chat.ID,
 		"✅ Your household's schedule has been updated successfully",
-	)
+	).Execute(ctx)
 
 	s.bus.Publish(ctx, "HouseholdUpdated", household)
 }
 
 func (s *TelegramService) help(ctx context.Context, message *telegram.Message) {
-	s.client.SendMessage(ctx, message.Chat.ID, "/register to register in the household")
+	s.client.SendMessage(message.Chat.ID, "/register to register in the household").Execute(ctx)
 }
 
 func (s *TelegramService) skip(ctx context.Context, message *telegram.Message) {
-	s.client.SendMessage(ctx, message.Chat.ID, "/skip")
+	s.client.SendMessage(message.Chat.ID, "/skip").Execute(ctx)
 }
 
 func (s *TelegramService) unknownCommand(ctx context.Context, message *telegram.Message) {
-	s.client.SendMessage(ctx, message.Chat.ID, "Unknown command")
+	s.client.SendMessage(message.Chat.ID, "Unknown command").Execute(ctx)
 }

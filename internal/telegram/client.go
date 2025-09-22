@@ -97,22 +97,27 @@ func (c *Client) postJSON(ctx context.Context, endpoint string, data any) (json.
 	return result.Result, nil
 }
 
-func (c *Client) SendMessage(ctx context.Context, chatID int64, text string, opts ...SendMessageOption) error {
-	payload := &sendMessagePayload{
-		ChatID: chatID,
-		Text:   text,
+func (c *Client) SendMessage(chatID int64, text string) *SendMessageBuilder {
+	return &SendMessageBuilder{
+		client: c,
+		payload: sendMessagePayload{
+			ChatID: chatID,
+			Text:   text,
+		},
 	}
+}
 
-	for _, opt := range opts {
-		opt(payload)
+func (c *Client) EditMessageReplyMarkup(
+	chatID int64,
+	messageID int64,
+) *EditMessageReplyMarkupBuilder {
+	return &EditMessageReplyMarkupBuilder{
+		client: c,
+		payload: editMessageReplyMarkupPayload{
+			ChatID:    chatID,
+			MessageID: messageID,
+		},
 	}
-
-	_, err := c.postJSON(ctx, "sendMessage", payload)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Client) GetMe(ctx context.Context) (*User, error) {
@@ -128,4 +133,46 @@ func (c *Client) GetMe(ctx context.Context) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+type SendMessageBuilder struct {
+	client  *Client
+	payload sendMessagePayload
+}
+
+func (b *SendMessageBuilder) WithParseMode(parseMode string) *SendMessageBuilder {
+	b.payload.ParseMode = &parseMode
+	return b
+}
+
+func (b *SendMessageBuilder) WithReplyParameters(messageID int64, chatID int64) *SendMessageBuilder {
+	b.payload.ReplyParameters = &replyParameters{MessageID: messageID, ChatID: chatID}
+	return b
+}
+
+func (b *SendMessageBuilder) WithInlineKeyboardMarkup(markup InlineKeyboard) *SendMessageBuilder {
+	b.payload.ReplyMarkup = &replyMarkup{InlineKeyboard: markup}
+	return b
+}
+
+func (b *SendMessageBuilder) Execute(ctx context.Context) error {
+	_, err := b.client.postJSON(ctx, "sendMessage", b.payload)
+	return err
+}
+
+type EditMessageReplyMarkupBuilder struct {
+	client  *Client
+	payload editMessageReplyMarkupPayload
+}
+
+func (b *EditMessageReplyMarkupBuilder) WithInlineKeyboardMarkup(
+	markup InlineKeyboard,
+) *EditMessageReplyMarkupBuilder {
+	b.payload.ReplyMarkup = &replyMarkup{InlineKeyboard: markup}
+	return b
+}
+
+func (b *EditMessageReplyMarkupBuilder) Execute(ctx context.Context) error {
+	_, err := b.client.postJSON(ctx, "editMessageReplyMarkup", b.payload)
+	return err
 }

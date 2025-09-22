@@ -88,10 +88,10 @@ func TestSendMessage(t *testing.T) {
 			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
-		err := client.SendMessage(ctx, want.ChatID, want.Text)
+		err := client.SendMessage(want.ChatID, want.Text).Execute(ctx)
 
 		if err != nil {
-			t.Errorf("SendMessage() returned an error: %v", err)
+			t.Errorf("SendMessage().Execute() returned an error: %v", err)
 		}
 	})
 
@@ -118,10 +118,10 @@ func TestSendMessage(t *testing.T) {
 			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
-		err := client.SendMessage(ctx, 1, "t", WithParseMode(want))
+		err := client.SendMessage(1, "t").WithParseMode(want).Execute(ctx)
 
 		if err != nil {
-			t.Errorf("SendMessage() returned an error: %v", err)
+			t.Errorf("SendMessage().Execute() returned an error: %v", err)
 		}
 	})
 
@@ -152,10 +152,10 @@ func TestSendMessage(t *testing.T) {
 			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
-		err := client.SendMessage(ctx, 1, "t", WithReplyParameters(want.MessageID, want.ChatID))
+		err := client.SendMessage(1, "t").WithReplyParameters(want.MessageID, want.ChatID).Execute(ctx)
 
 		if err != nil {
-			t.Errorf("SendMessage() returned an error: %v", err)
+			t.Errorf("SendMessage().Execute() returned an error: %v", err)
 		}
 	})
 
@@ -186,12 +186,7 @@ func TestSendMessage(t *testing.T) {
 				t.Fatalf("expected reply_markup to be present")
 			}
 
-			var gotMarkup InlineKeyboardMarkup
-			if err := json.Unmarshal(got, &gotMarkup); err != nil {
-				t.Fatalf("failed to unmarshal ReplyMarkup: %v", err)
-			}
-
-			for i, row := range gotMarkup.Keyboard {
+			for i, row := range got.InlineKeyboard {
 				if row == nil {
 					t.Errorf("row is nil, expected %v", want[i])
 					continue
@@ -219,10 +214,56 @@ func TestSendMessage(t *testing.T) {
 			io.WriteString(w, `{"ok": true, "result": {}}`)
 		}
 
-		err := client.SendMessage(ctx, 1, "t", WithInlineKeyboardMarkup(want))
+		err := client.SendMessage(1, "t").WithInlineKeyboardMarkup(want).Execute(ctx)
 
 		if err != nil {
-			t.Errorf("SendMessage() returned an error: %v", err)
+			t.Errorf("SendMessage().Execute() returned an error: %v", err)
+		}
+	})
+}
+
+func TestEditMessageReplyMarkup(t *testing.T) {
+	client, handler, teardown := getTestClient(t)
+	defer teardown()
+
+	ctx := context.Background()
+	t.Run("success", func(t *testing.T) {
+		want := editMessageReplyMarkupPayload{
+			ChatID:    -1234567898765,
+			MessageID: 123,
+		}
+
+		handler.handler = func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "POST" {
+				t.Errorf("got %s method, want %s", r.Method, "POST")
+			}
+
+			if !strings.HasSuffix(r.URL.Path, "/editMessageReplyMarkup") {
+				t.Errorf("got endpoint %s, want %s", r.URL.Path, "/editMessageReplyMarkup")
+			}
+
+			var got editMessageReplyMarkupPayload
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatalf("failed to unmarshal request body: %v", err)
+			}
+
+			if got.ChatID != want.ChatID {
+				t.Errorf("chat_id is %d, want %d", got.ChatID, want.ChatID)
+			}
+
+			if got.MessageID != want.MessageID {
+				t.Errorf("message_id is %d, want %d", got.MessageID, want.MessageID)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, `{"ok": true, "result": {}}`)
+		}
+
+		err := client.EditMessageReplyMarkup(want.ChatID, want.MessageID).Execute(ctx)
+
+		if err != nil {
+			t.Errorf("EditMessageReplyMarkup().Execute() returned an error: %v", err)
 		}
 	})
 }

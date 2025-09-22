@@ -2,13 +2,13 @@
 package telegram
 
 import (
-	"encoding/json"
 	"strings"
 )
 
 type Update struct {
-	UpdateID int      `json:"update_id"`
-	Message  *Message `json:"message,omitempty"`
+	UpdateID      int            `json:"update_id"`
+	Message       *Message       `json:"message"`
+	CallbackQuery *CallbackQuery `json:"callback_query"`
 }
 
 type Message struct {
@@ -18,6 +18,7 @@ type Message struct {
 	From           User            `json:"from"`
 	Text           string          `json:"text"`
 	Entities       []MessageEntity `json:"entities"`
+	ReplyMarkup    *replyMarkup    `json:"reply_markup"`
 }
 
 type User struct {
@@ -48,22 +49,15 @@ func (e MessageEntity) Text(m *Message) string {
 	return text
 }
 
-type sendMessagePayload struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
-
-	ParseMode       *string          `json:"parse_mode,omitempty"`
-	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
-	ReplyMarkup     json.RawMessage  `json:"reply_markup,omitempty"`
+type CallbackQuery struct {
+	From    User    `json:"from"`
+	Message Message `json:"message"`
+	Data    string  `json:"data"`
 }
 
-type replyParameters struct {
-	MessageID int64 `json:"message_id"`
-	ChatID    int64 `json:"chat_id"`
-}
-
-type InlineKeyboardMarkup struct {
-	Keyboard InlineKeyboard `json:"inline_keyboard"`
+type replyMarkup struct {
+	InlineKeyboard InlineKeyboard `json:"inline_keyboard"`
+	ReplyKeyboard  ReplyKeyboard  `json:"reply_keyboard"`
 }
 
 type InlineKeyboard [][]*InlineKeyboardButton
@@ -74,24 +68,29 @@ type InlineKeyboardButton struct {
 	CallbackData string `json:"callback_data"`
 }
 
-type SendMessageOption func(*sendMessagePayload)
+type ReplyKeyboard [][]*ReplyKeyboardButton
 
-func WithParseMode(parseMode string) SendMessageOption {
-	return func(p *sendMessagePayload) {
-		p.ParseMode = &parseMode
-	}
+type ReplyKeyboardButton struct {
+	Text string `json:"text"`
 }
 
-func WithReplyParameters(messageID int64, chatID int64) SendMessageOption {
-	return func(p *sendMessagePayload) {
-		p.ReplyParameters = &replyParameters{MessageID: messageID, ChatID: chatID}
-	}
+type sendMessagePayload struct {
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+
+	ParseMode       *string          `json:"parse_mode,omitempty"`
+	ReplyParameters *replyParameters `json:"reply_parameters,omitempty"`
+	ReplyMarkup     *replyMarkup     `json:"reply_markup,omitempty"`
 }
 
-func WithInlineKeyboardMarkup(markup InlineKeyboard) SendMessageOption {
-	return func(p *sendMessagePayload) {
-		p.ReplyMarkup, _ = json.Marshal(InlineKeyboardMarkup{
-			Keyboard: markup,
-		})
-	}
+type replyParameters struct {
+	MessageID int64 `json:"message_id"`
+	ChatID    int64 `json:"chat_id"`
+}
+
+type editMessageReplyMarkupPayload struct {
+	ChatID    int64 `json:"chat_id"`
+	MessageID int64 `json:"message_id"`
+
+	ReplyMarkup *replyMarkup `json:"reply_markup"`
 }
