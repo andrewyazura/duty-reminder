@@ -120,6 +120,17 @@ func (c *Client) EditMessageReplyMarkup(
 	}
 }
 
+func (c *Client) AnswerCallbackQuery(
+	callbackQueryID string,
+) *AnswerCallbackQueryBuilder {
+	return &AnswerCallbackQueryBuilder{
+		client: c,
+		payload: answerCallbackQueryPayload{
+			CallbackQueryID: callbackQueryID,
+		},
+	}
+}
+
 func (c *Client) GetMe(ctx context.Context) (*User, error) {
 	rawResult, err := c.postJSON(ctx, "getMe", nil)
 	if err != nil {
@@ -174,5 +185,25 @@ func (b *EditMessageReplyMarkupBuilder) WithInlineKeyboardMarkup(
 
 func (b *EditMessageReplyMarkupBuilder) Execute(ctx context.Context) error {
 	_, err := b.client.postJSON(ctx, "editMessageReplyMarkup", b.payload)
+	return err
+}
+
+type AnswerCallbackQueryBuilder struct {
+	client  *Client
+	payload answerCallbackQueryPayload
+}
+
+func (b *AnswerCallbackQueryBuilder) WithText(text string) *AnswerCallbackQueryBuilder {
+	b.payload.Text = &text
+	return b
+}
+
+func (b *AnswerCallbackQueryBuilder) WithShowAlert(showAlert bool) *AnswerCallbackQueryBuilder {
+	b.payload.ShowAlert = &showAlert
+	return b
+}
+
+func (b *AnswerCallbackQueryBuilder) Execute(ctx context.Context) error {
+	_, err := b.client.postJSON(ctx, "answerCallbackQuery", b.payload)
 	return err
 }

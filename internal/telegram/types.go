@@ -50,6 +50,7 @@ func (e MessageEntity) Text(m *Message) string {
 }
 
 type CallbackQuery struct {
+	ID      string  `json:"id"`
 	From    User    `json:"from"`
 	Message Message `json:"message"`
 	Data    string  `json:"data"`
@@ -93,4 +94,11 @@ type editMessageReplyMarkupPayload struct {
 	MessageID int64 `json:"message_id"`
 
 	ReplyMarkup *replyMarkup `json:"reply_markup"`
+}
+
+type answerCallbackQueryPayload struct {
+	CallbackQueryID string `json:"callback_query_id"`
+
+	Text      *string `json:"text,omitempty"`
+	ShowAlert *bool   `json:"show_alert,omitempty"`
 }

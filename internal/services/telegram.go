@@ -96,7 +96,7 @@ func (s *TelegramService) handleCallbackQuery(
 		for _, row := range keyboard {
 			if row[0].CallbackData == data {
 				row[0].Text = fmt.Sprintf("✅ %s", row[0].Text)
-				row[0].CallbackData = "do_nothing"
+				row[0].CallbackData = "completed_item"
 				break
 			}
 		}
@@ -105,6 +105,14 @@ func (s *TelegramService) handleCallbackQuery(
 			message.Chat.ID,
 			message.MessageID,
 		).WithInlineKeyboardMarkup(keyboard).Execute(ctx)
+	}
+
+	if strings.HasPrefix(data, "completed_item") {
+		s.client.AnswerCallbackQuery(
+			callbackQuery.ID,
+		).WithText(
+			"already done",
+		).WithShowAlert(true).Execute(ctx)
 	}
 }
 
