@@ -108,11 +108,7 @@ func (s *TelegramService) handleCallbackQuery(
 	}
 
 	if strings.HasPrefix(data, "completed_item") {
-		s.client.AnswerCallbackQuery(
-			callbackQuery.ID,
-		).WithText(
-			"already done",
-		).WithShowAlert(true).Execute(ctx)
+		s.client.AnswerCallbackQuery(callbackQuery.ID).WithText("already done").Execute(ctx)
 	}
 }
 
