@@ -58,7 +58,7 @@ func (s DutyService) NotifyHousehold(ctx context.Context, event eventbus.Event) 
 				m.Name,
 				m.TelegramID,
 			),
-		).Execute(ctx)
+		).WithParseMode("markdown").Execute(ctx)
 
 		if checklist := household.Checklist; checklist != nil {
 			keyboard := telegram.InlineKeyboard{}
